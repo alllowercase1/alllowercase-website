@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>alllowercase, llc</title>
+    <title>alllowercase</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400&display=swap');
         
@@ -33,7 +33,6 @@
         .main-title {
             font-size: 1.5rem;
             font-weight: 300;
-            transition: transform 0.15s ease-out;
             display: inline-block;
             margin-bottom: 1rem;
         }
@@ -152,29 +151,19 @@
     <script>
         const text = document.getElementById('text');
         const subItems = document.getElementById('subItems');
+        const textContainer = document.querySelector('.text-container');
         let menuExpanded = false;
         
-        // Mouse tilt effect
-        document.addEventListener('mousemove', (e) => {
-            const rect = text.getBoundingClientRect();
-            const textCenterX = rect.left + rect.width / 2;
-            const textCenterY = rect.top + rect.height / 2;
-            
-            const deltaX = e.clientX - textCenterX;
-            const deltaY = e.clientY - textCenterY;
-            
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const maxDistance = 400;
-            
-            if (distance < maxDistance) {
-                const strength = (maxDistance - distance) / maxDistance;
-                const tiltX = (deltaY / distance) * strength * 8;
-                const tiltY = -(deltaX / distance) * strength * 8;
-                
-                text.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
-            } else {
-                text.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-            }
+        // Hover on text to expand menu
+        textContainer.addEventListener('mouseenter', () => {
+            subItems.classList.add('visible');
+            menuExpanded = true;
+        });
+        
+        textContainer.addEventListener('mouseleave', () => {
+            subItems.classList.remove('visible');
+            menuExpanded = false;
+            scrollAccumulator = 0;
         });
         
         // Wheel event to expand menu without scrolling page
