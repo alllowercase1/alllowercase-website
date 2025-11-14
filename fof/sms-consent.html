@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Consent & Verification - Friends of Friends</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background: #0f0c0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 40px 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(45, 30, 20, 0.6) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(40, 25, 15, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(35, 22, 12, 0.4) 0%, transparent 40%);
+            filter: blur(60px);
+            z-index: 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 300;
+            opacity: 0.5;
+            margin-bottom: 2rem;
+            transition: opacity 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .back-link:hover {
+            opacity: 1;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.85;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        
+        ul, ol {
+            margin-bottom: 1rem;
+            margin-left: 2rem;
+            opacity: 0.8;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            font-weight: 400;
+            opacity: 1;
+        }
+        
+        a {
+            color: #ffffff;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        a:hover {
+            opacity: 1;
+        }
+        
+        .screenshot-container {
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .screenshot-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            opacity: 0.95;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/fof" class="back-link">← back to friends of friends</a>
+        
+        <h1>SMS Consent & Phone Verification</h1>
+
+        <p><strong>Purpose:</strong> This page demonstrates how Friends of Friends (FoF) obtains user consent for SMS verification messages and explains our phone verification process. FoF uses SMS exclusively for one-time verification codes during account signup—we do not send marketing messages or promotional content.</p>
+
+        <h2>How SMS Verification Works</h2>
+        <p>Friends of Friends requires phone number verification to ensure account security and enable our connection-based social network. Here's the complete process:</p>
+
+        <h3>Account Creation & Consent Flow</h3>
+
+        <p><strong>Step 1: User Registration</strong></p>
+        <p>During account signup, users provide:</p>
+        <ul>
+            <li>Display name (name to show on profile)</li>
+            <li>Email address</li>
+            <li>Phone number (with country code)</li>
+            <li>Password</li>
+        </ul>
+
+        <p><strong>Step 2: Terms Agreement & SMS Consent</strong></p>
+        <p>Before creating an account, users must check a box confirming they have read and agree to:</p>
+        <ul>
+            <li>FoF <a href="/fof/tos">Terms of Service</a></li>
+            <li>FoF <a href="/fof/privacy">Privacy Policy</a></li>
+            <li>Receipt of SMS verification code</li>
+        </ul>
+        <p><strong>Explicit consent language shown to users:</strong></p>
+        
+        <p><strong>Checkbox 1 - Terms & Conditions:</strong></p>
+        <p>☑ I agree to the <a href="/fof/tos">Terms of Service</a> and <a href="/fof/privacy">Privacy Policy</a></p>
+        
+        <p><strong>Checkbox 2 - SMS Consent (Required by Twilio A2P 10DLC):</strong></p>
+        <p>☑ I consent to receive SMS verification codes from Friends of Friends at the phone number provided. Standard message and data rates may apply. Message frequency: one-time verification code only. Reply STOP to opt-out or HELP for support. This is a one-time verification message to secure your account.</p>
+        
+        <p><strong>Checkbox 3 - Age Verification:</strong></p>
+        <p>☑ I am at least 13 years of age</p>
+
+        <div class="screenshot-container">
+            <img src="signup-flow.png" alt="FoF Signup and Verification Flow - showing account creation screen with consent checkboxes, verification code entry screen, and success screen">
+        </div>
+
+        <p><strong>Step 3: SMS Code Delivery</strong></p>
+        <p>After account creation, FoF sends a 6-digit verification code via SMS to the provided phone number.</p>
+        <p><strong>Example SMS message:</strong></p>
+        <p>Your Friends of Friends verification code is: <strong>123456</strong></p>
+        <p>This code expires in 10 minutes.</p>
+
+        <p><strong>Step 4: Code Verification</strong></p>
+        <p>Users enter the 6-digit code in the app to verify their phone number and activate their account.</p>
+
+        <h2>SMS Use Case</h2>
+        <p><strong>Purpose:</strong> Account verification and security</p>
+        <p><strong>Message Type:</strong> One-time verification codes (OTP)</p>
+        <p><strong>Frequency:</strong> One-time only during account creation (unless user requests a new code)</p>
+        <p><strong>Content:</strong> 6-digit numeric verification codes sent via SMS</p>
+        <p><strong>Timing:</strong> Immediate delivery upon account registration</p>
+
+        <h2>User Consent Requirements Met</h2>
+        <h3>FoF's SMS Program Complies With:</h3>
+        <ul>
+            <li><strong>✓ Express Written Consent:</strong> Users must actively check a consent box before receiving SMS messages</li>
+            <li><strong>✓ Clear Disclosure:</strong> Users are informed that they will receive SMS verification codes</li>
+            <li><strong>✓ Terms Acceptance:</strong> Consent is bundled with acceptance of <a href="/fof/tos">Terms of Service</a> and <a href="/fof/privacy">Privacy Policy</a></li>
+            <li><strong>✓ Opt-Out Available:</strong> Users can reply STOP to opt out of SMS messages</li>
+            <li><strong>✓ Help Information:</strong> Users can reply HELP for customer support information</li>
+            <li><strong>✓ Rate Warning:</strong> Users are informed that standard messaging rates may apply</li>
+            <li><strong>✓ Frequency Disclosure:</strong> Users are informed this is a one-time verification message</li>
+        </ul>
+
+        <h2>Opt-Out Process</h2>
+        <p>Users can opt out of SMS messages at any time by:</p>
+        <ul>
+            <li><strong>Replying STOP:</strong> Text STOP to the number that sent the verification code</li>
+            <li><strong>Not Creating Account:</strong> Simply not completing the signup process</li>
+            <li><strong>Contacting Support:</strong> Email jacob@alllowercase.co to request opt-out</li>
+        </ul>
+        <p>Upon opt-out, FoF will not send any further SMS messages to the user's phone number. Note that opting out will prevent account creation or phone number verification.</p>
+
+        <h2>Help & Support</h2>
+        <p>For help with SMS verification or any questions:</p>
+        <ul>
+            <li><strong>Reply HELP:</strong> Text HELP to the verification number for support information</li>
+            <li><strong>Email Support:</strong> jacob@alllowercase.co</li>
+            <li><strong>Support Page:</strong> <a href="/fof/support">alllowercase.co/fof/support</a></li>
+        </ul>
+
+        <h2>Privacy & Data Protection</h2>
+        <p>Your phone number is protected through multiple security measures:</p>
+        <ul>
+            <li><strong>Hashing:</strong> Phone numbers are converted to SHA-256 hashes before storage</li>
+            <li><strong>No Plain Text Storage:</strong> We never store your phone number in plain text</li>
+            <li><strong>Limited Sharing:</strong> Your phone number is only shared with our SMS provider for code delivery</li>
+            <li><strong>Encryption:</strong> All data transmitted over HTTPS with TLS encryption</li>
+            <li><strong>No Marketing:</strong> We never use your phone number for marketing or promotional messages</li>
+        </ul>
+        <p>For complete details, see our <a href="/fof/privacy">Privacy Policy</a>.</p>
+
+        <h2>SMS Compliance Information</h2>
+        <p><strong>Campaign Details:</strong></p>
+        <ul>
+            <li><strong>Campaign Type:</strong> Low Volume Mixed (Account Notification - OTP)</li>
+            <li><strong>Use Case:</strong> Two-Factor Authentication / Account Verification</li>
+            <li><strong>Message Volume:</strong> Low (one message per user registration)</li>
+            <li><strong>Business Entity:</strong> alllowercase, llc</li>
+            <li><strong>Business Location:</strong> Albany, NY</li>
+            <li><strong>Contact Email:</strong> jacob@alllowercase.co</li>
+        </ul>
+
+        <h2>Standard SMS Terms</h2>
+        <p><strong>Message Frequency:</strong> One-time verification message per account registration attempt</p>
+        <p><strong>Message & Data Rates:</strong> Standard message and data rates may apply based on your mobile carrier plan</p>
+        <p><strong>Carriers:</strong> Service available on all major U.S. carriers</p>
+        <p><strong>Opt-Out:</strong> Reply STOP to unsubscribe</p>
+        <p><strong>Help:</strong> Reply HELP for customer support</p>
+        <p><strong>Support:</strong> Email jacob@alllowercase.co for assistance</p>
+
+        <h2>Example Signup Flow</h2>
+        <p><strong>Complete User Journey:</strong></p>
+        <ol>
+            <li>User downloads FoF from the App Store</li>
+            <li>User taps "Sign Up" on welcome screen</li>
+            <li>User enters display name, email, phone number, and password</li>
+            <li>User reads <a href="/fof/tos">Terms of Service</a> and <a href="/fof/privacy">Privacy Policy</a> (linked)</li>
+            <li>User checks consent box agreeing to terms and SMS verification</li>
+            <li>User taps "Create Account" button</li>
+            <li>Account is created in our system</li>
+            <li>SMS verification code is immediately sent to user's phone</li>
+            <li>User receives SMS with 6-digit code</li>
+            <li>User enters code in verification screen</li>
+            <li>Phone number is verified and account is fully activated</li>
+            <li>User can now access all FoF features</li>
+        </ol>
+
+        <h2>Additional Information</h2>
+        <p>For more information about Friends of Friends:</p>
+        <ul>
+            <li><strong>Terms of Service:</strong> <a href="/fof/tos">alllowercase.co/fof/tos</a></li>
+            <li><strong>Privacy Policy:</strong> <a href="/fof/privacy">alllowercase.co/fof/privacy</a></li>
+            <li><strong>Support:</strong> <a href="/fof/support">alllowercase.co/fof/support</a></li>
+            <li><strong>Contact:</strong> jacob@alllowercase.co</li>
+        </ul>
+
+        <p><strong>Last Updated:</strong> November 14, 2025</p>
+        <p><strong>Business:</strong> alllowercase, llc | Albany, NY</p>
+        <p><strong>Contact:</strong> jacob@alllowercase.co</p>
+    </div>
+</body>
+</html>

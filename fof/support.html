@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Friends of Friends</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background: #0f0c0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 40px 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(45, 30, 20, 0.6) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(40, 25, 15, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(35, 22, 12, 0.4) 0%, transparent 40%);
+            filter: blur(60px);
+            z-index: 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 300;
+            opacity: 0.5;
+            margin-bottom: 2rem;
+            transition: opacity 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .back-link:hover {
+            opacity: 1;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.85;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        
+        ul, ol {
+            margin-bottom: 1rem;
+            margin-left: 2rem;
+            opacity: 0.8;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            font-weight: 400;
+            opacity: 1;
+        }
+        
+        a {
+            color: #ffffff;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        a:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/fof" class="back-link">← back to friends of friends</a>
+        
+        <h1>Support</h1>
+
+        <h2>Get in Touch</h2>
+        <p>We're here to help! If you have questions, issues, or feedback about Friends of Friends, please reach out:</p>
+        <p>
+            <strong>Email:</strong> jacob@alllowercase.co<br>
+            <strong>Response Time:</strong> We typically respond within 24-48 hours during business days
+        </p>
+        <p>Please include as much detail as possible about your issue, including:</p>
+        <ul>
+            <li>Your device type and iOS version</li>
+            <li>A description of the problem</li>
+            <li>Screenshots if applicable</li>
+            <li>Steps to reproduce the issue</li>
+        </ul>
+
+        <h2>Frequently Asked Questions</h2>
+
+        <h3>How do I verify my phone number?</h3>
+        <p>During signup, you'll receive a 6-digit verification code via SMS. Enter this code in the app to verify your phone number. If you don't receive a code within a few minutes, check that you entered the correct phone number and try again. If issues persist, contact support.</p>
+
+        <h3>Why does FoF need access to my contacts?</h3>
+        <p>FoF's core feature is showing you who knows who in your network. We use your contacts to build a connection graph showing relationships up to 3 degrees of separation. We convert phone numbers into secure hashes before uploading and never store contact names. Contact sync is optional and can be done manually—we never sync contacts in the background.</p>
+
+        <h3>How do I control who sees my posts?</h3>
+        <p>When creating a post, you can set the visibility level:</p>
+        <ul>
+            <li><strong>My Friends (1 degree):</strong> Only your direct contacts</li>
+            <li><strong>Friends of Friends (2 degrees):</strong> Your contacts and their contacts</li>
+            <li><strong>Extended Network (3 degrees):</strong> Connections up to 3 degrees away</li>
+            <li><strong>Anyone (6 degrees):</strong> All FoF users (public)</li>
+        </ul>
+        <p>You can also set default visibility preferences in your settings.</p>
+
+        <h3>Who can message me on FoF?</h3>
+        <p>Users within 2 degrees of connection can send you messages. First-time messages appear as message requests, which you can accept or decline. Once accepted, you can have full conversations. You can also send messages to anyone who has posted content you're interested in.</p>
+
+        <h3>How do I delete a post?</h3>
+        <p>Tap on your post, then tap the three-dot menu icon in the top right corner. Select "Delete Post" from the options. You can also archive posts to hide them from your feed without permanently deleting them.</p>
+
+        <h3>Can I control who can repost my content?</h3>
+        <p>Yes! When creating a post, you can choose whether to allow reposting. You can also block specific users from reposting specific posts. Your repost preferences can be set as defaults in your settings.</p>
+
+        <h3>How do I revoke contact access?</h3>
+        <p>Go to your iOS Settings → Privacy & Security → Contacts → FoF, and toggle off the permission. This will prevent the app from accessing your contacts. Your existing connection graph will remain until you delete your account.</p>
+
+        <h3>How do I enable or disable location services?</h3>
+        <p>Go to iOS Settings → Privacy & Security → Location Services → FoF. You can choose "Never," "Ask Next Time Or When I Share," or "While Using the App." Location data is used for feed personalization and nearby post discovery, and you can control the granularity of location tags on your posts.</p>
+
+        <h3>How does the connection graph work?</h3>
+        <p>When you sync your contacts, FoF matches your hashed phone numbers against other users. This creates direct connections (1 degree). The app then maps out who your friends are connected to (2 degrees), and their connections (3 degrees), creating a visual map of your social network. This helps you discover mutual friends and understand how you're connected to others on FoF.</p>
+
+        <h3>How do I report inappropriate content or behavior?</h3>
+        <p>If you see content or behavior that violates our <a href="/fof/tos">Terms of Service</a>, you can report it using the report button on posts or user profiles. You can also email jacob@alllowercase.co with details. We review all reports and take appropriate action.</p>
+
+        <h3>How do I block another user?</h3>
+        <p>Go to the user's profile, tap the three-dot menu icon, and select "Block User." Blocked users cannot see your posts, message you, or view your profile. You can manage blocked users in your settings.</p>
+
+        <h3>Can I download my data?</h3>
+        <p>Yes! You can request a copy of your data by emailing jacob@alllowercase.co. We'll provide your data in a machine-readable format within 30 days. This includes your profile information, posts, messages, and connection data.</p>
+
+        <h2>How to Delete Your Account</h2>
+        <p><strong>Warning:</strong> Account deletion is permanent and cannot be undone.</p>
+        <p>To delete your FoF account:</p>
+        <ol>
+            <li>Open the FoF app</li>
+            <li>Go to Settings (gear icon)</li>
+            <li>Scroll to the bottom and tap "Delete Account"</li>
+            <li>Read the warning about permanent deletion</li>
+            <li>Enter your password to confirm</li>
+            <li>Tap "Delete My Account" to finalize</li>
+        </ol>
+        <p><strong>Alternatively:</strong> You can request account deletion by emailing jacob@alllowercase.co with "Delete My Account" in the subject line. Please include your registered email address and phone number for verification.</p>
+        
+        <p><strong>What happens when you delete your account:</strong></p>
+        <ul>
+            <li>Your profile will be permanently removed</li>
+            <li>All your posts and messages will be deleted</li>
+            <li>Your connections will be severed</li>
+            <li>Your contact hashes will be removed</li>
+            <li>Your data will be deleted or anonymized within 30 days</li>
+            <li>Some data may remain in backups for up to 90 days before permanent deletion</li>
+        </ul>
+
+        <h2>Common Issues & Solutions</h2>
+
+        <h3>I'm not receiving SMS verification codes</h3>
+        <p><strong>Possible solutions:</strong></p>
+        <ul>
+            <li>Check that you entered the correct phone number</li>
+            <li>Ensure your phone has cellular service</li>
+            <li>Check your spam/blocked messages folder</li>
+            <li>Wait a few minutes—sometimes SMS delivery is delayed</li>
+            <li>Try requesting a new code</li>
+            <li>If the issue persists, contact support at jacob@alllowercase.co</li>
+        </ul>
+
+        <h3>My app is crashing or freezing</h3>
+        <p><strong>Try these steps:</strong></p>
+        <ul>
+            <li>Force quit the app and reopen it</li>
+            <li>Check for app updates in the App Store</li>
+            <li>Restart your device</li>
+            <li>Ensure you have the latest iOS version</li>
+            <li>Check your internet connection</li>
+            <li>Free up device storage if you're running low</li>
+            <li>If problems continue, email support with your device model and iOS version</li>
+        </ul>
+
+        <h3>I can't see some posts in my feed</h3>
+        <p>Posts are visible based on connection degrees. If you can't see a post, it may be because:</p>
+        <ul>
+            <li>The post's visibility is set to a connection degree you're not within</li>
+            <li>The post author has restricted who can see it</li>
+            <li>The post was deleted or archived</li>
+            <li>You're not connected to the author within the required degrees</li>
+        </ul>
+
+        <h3>My contact sync isn't working</h3>
+        <p><strong>Check these settings:</strong></p>
+        <ul>
+            <li>Ensure FoF has permission to access contacts (iOS Settings → Privacy & Security → Contacts)</li>
+            <li>Try manually triggering a re-sync from app settings</li>
+            <li>Verify you have an active internet connection</li>
+            <li>Make sure you've granted all necessary permissions</li>
+            <li>Contact support if the issue persists</li>
+        </ul>
+
+        <h2>Privacy & Security</h2>
+        <p>For detailed information about how we handle your data, please see our <a href="/fof/privacy">Privacy Policy</a>.</p>
+        <p><strong>Key privacy points:</strong></p>
+        <ul>
+            <li>Phone numbers are hashed with SHA-256 before storage</li>
+            <li>Contact names are never uploaded or stored</li>
+            <li>Messages are private between sender and receiver</li>
+            <li>All data is encrypted in transit and at rest</li>
+            <li>We never sell your data to third parties</li>
+            <li>You control your post visibility and who can message you</li>
+        </ul>
+
+        <h2>Feedback & Feature Requests</h2>
+        <p>We love hearing from our users! If you have ideas for new features or improvements, please email jacob@alllowercase.co. We read every suggestion and consider them for future updates.</p>
+
+        <h2>Terms of Service</h2>
+        <p>For information about acceptable use, user responsibilities, and legal terms, please see our <a href="/fof/tos">Terms of Service</a>.</p>
+
+        <h2>Still Need Help?</h2>
+        <p>Can't find what you're looking for? We're happy to help!</p>
+        <p><strong>Contact us at:</strong> jacob@alllowercase.co</p>
+        <p>We typically respond within 24-48 hours during business days (Monday-Friday).</p>
+    </div>
+</body>
+</html>
