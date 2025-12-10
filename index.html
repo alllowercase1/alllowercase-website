@@ -158,14 +158,25 @@
     
     <script>
         const subItems = document.getElementById('subItems');
+        const mainTitle = document.getElementById('text');
         let menuExpanded = false;
-        
+
+        // Toggle menu on click (for mobile)
+        mainTitle.addEventListener('click', () => {
+            menuExpanded = !menuExpanded;
+            if (menuExpanded) {
+                subItems.classList.add('visible');
+            } else {
+                subItems.classList.remove('visible');
+            }
+        });
+
         // Wheel event to expand menu without scrolling page
         let scrollAccumulator = 0;
         window.addEventListener('wheel', (e) => {
             e.preventDefault();
             scrollAccumulator += e.deltaY;
-            
+
             if (scrollAccumulator > 20 && !menuExpanded) {
                 subItems.classList.add('visible');
                 menuExpanded = true;
@@ -175,6 +186,25 @@
                 scrollAccumulator = 0;
             }
         }, { passive: false });
+
+        // Touch scroll for mobile
+        let touchStartY = 0;
+        window.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            const touchY = e.touches[0].clientY;
+            const diff = touchStartY - touchY;
+
+            if (diff > 30 && !menuExpanded) {
+                subItems.classList.add('visible');
+                menuExpanded = true;
+            } else if (diff < -30 && menuExpanded) {
+                subItems.classList.remove('visible');
+                menuExpanded = false;
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
