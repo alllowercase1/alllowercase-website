@@ -332,6 +332,35 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
 .seed-warning { font-size: 10px; color: var(--accent-red); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
 .seed-info { font-size: 10px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
 
+/* Lock screen */
+.lock-screen {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: var(--bg);
+  background-image: radial-gradient(circle, rgba(184,178,170,0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.lock-screen.hidden { display: none; }
+.lock-label {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px;
+}
+.lock-input {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 16px; padding: 8px 0; font-family: var(--font);
+  outline: none; text-align: center; width: 200px; transition: border-color 0.15s;
+  letter-spacing: 0.1em;
+}
+.lock-input:focus { border-bottom-color: var(--accent); }
+.lock-input::placeholder { color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; }
+.lock-error {
+  font-size: 10px; color: var(--accent-red); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-top: 12px; height: 14px;
+}
+
 /* Gear button */
 .gear-btn {
   position: fixed; bottom: 20px; right: 20px; width: auto; height: auto;
@@ -417,6 +446,12 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-label">// Enter Password</div>
+  <input class="lock-input" id="lockInput" type="password" placeholder="..." autofocus>
+  <div class="lock-error" id="lockError"></div>
+</div>
 
 <!-- Decorative crosshair SVG -->
 <svg class="deco-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1559,6 +1594,31 @@ function fmtShort(n) {
   if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
   return '$' + Math.round(n);
 }
+
+// --- Lock screen ---
+(function() {
+  const lock = document.getElementById('lockScreen');
+  const input = document.getElementById('lockInput');
+  const error = document.getElementById('lockError');
+  const pw = 'gia';
+
+  if (sessionStorage.getItem('fc_unlocked') === '1') {
+    lock.classList.add('hidden');
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      if (input.value === pw) {
+        sessionStorage.setItem('fc_unlocked', '1');
+        lock.classList.add('hidden');
+      } else {
+        error.textContent = 'INCORRECT';
+        input.value = '';
+        setTimeout(() => { error.textContent = ''; }, 1500);
+      }
+    }
+  });
+})();
 
 // --- Init ---
 autoHideStatements();
