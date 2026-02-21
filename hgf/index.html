@@ -38,17 +38,7 @@ html, body {
 
 /* dot grid is already faint via rgba — no overlay needed */
 
-/* Decorative crosshair SVG */
-.deco-svg {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  width: 80px;
-  height: 80px;
-  opacity: 0.25;
-  pointer-events: none;
-  z-index: 0;
-}
+/* Decorative crosshair SVG — removed */
 
 #app {
   display: flex;
@@ -443,8 +433,110 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .growth-table .col-total { color: var(--text); font-weight: 700; }
 .growth-table .col-principal { color: var(--accent); }
 .growth-table tr.interest-flip td { background: rgba(74,122,58,0.08); }
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  html, body { height: 100%; overflow: hidden; }
+
+  #app { padding: 8px 0 0; height: 100vh; display: flex; flex-direction: column; }
+  body.settings-open #app { margin-right: 0; }
+
+  /* Tabs */
+  .tab-bar { padding: 0 0 6px; margin: 0 8px; }
+  .tab-btn { font-size: 9px; padding: 5px 12px; letter-spacing: 0.15em; }
+
+  /* Calendar header — single line, compact */
+  .cal-header { padding: 6px 8px 4px; }
+  .cal-header h1 { font-size: 15px; letter-spacing: 0.1em; white-space: nowrap; }
+  .cal-nav button { font-size: 10px; }
+  .cal-nav .arrow-btn { font-size: 16px; }
+  .cal-nav { gap: 8px; }
+
+  /* Day-of-week row — hidden on mobile (each month section has its own) */
+  .dow-row { display: none; }
+
+  /* Grid wrap — scroll-snap container */
+  .cal-grid-wrap {
+    flex: 1; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: y mandatory;
+  }
+
+  .month-section {
+    scroll-snap-align: start;
+    height: 100%;
+    display: flex; flex-direction: column;
+  }
+
+  .month-section .month-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text2); text-transform: uppercase; letter-spacing: 0.15em;
+    padding: 4px 8px 2px; flex-shrink: 0;
+  }
+
+  .month-section .section-dow-row {
+    display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 2px;
+  }
+  .month-section .section-dow-row span {
+    font-size: 8px; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  .month-section .cal-grid {
+    flex: 1; display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    height: auto;
+  }
+
+  /* Day cells — compact, clip overflow */
+  .day-cell { padding: 2px 3px 3px; min-height: 0; overflow: hidden; }
+  .day-num { font-size: 9px; width: 16px; height: 16px; margin-bottom: 0; }
+  .day-cell.today .day-num { border-width: 1px; }
+
+  /* Balance numbers — small enough to never truncate */
+  .day-balance { font-size: 11px; line-height: 1.1; white-space: nowrap; }
+  .day-savings { font-size: 8px; line-height: 1.1; }
+
+  /* Event pills — wrap text, no truncation */
+  .day-events { gap: 1px; margin-top: 1px; overflow: visible; }
+  .event-pill {
+    font-size: 7px; line-height: 1.2;
+    padding: 1px 3px; border-left-width: 2px;
+    white-space: normal; overflow: visible; text-overflow: unset;
+    word-break: break-word;
+  }
+
+  /* Settings button — fixed bottom-right, above content */
+  .gear-btn {
+    position: fixed; bottom: 12px; right: 12px;
+    font-size: 9px; letter-spacing: 0.1em;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 6px 10px; z-index: 50;
+  }
+
+  /* Sidebar — full-width overlay on mobile */
+  .sidebar { width: 100vw; }
+  .sidebar-scroll { padding: 16px 16px 32px; }
+  .s-field label { font-size: 10px; }
+  .s-field input[type="number"],
+  .s-field input[type="date"],
+  .s-field input[type="text"] { font-size: 12px; width: 110px; }
+  .s-field select { font-size: 12px; }
+
+  /* Growth tab */
+  .growth-wrap { padding: 12px 8px 8px; }
+  .growth-inputs { gap: 12px; justify-content: center; }
+  .growth-field label { font-size: 9px; }
+  .growth-field input { font-size: 12px; width: 120px; }
+  .growth-body { flex-direction: column; }
+  .growth-chart-wrap { min-height: 200px; padding: 12px 8px; }
+  .growth-table-wrap { width: 100%; max-height: 240px; }
+  .growth-table { font-size: 10px; }
+  .growth-table th { font-size: 9px; padding: 6px 6px; }
+  .growth-table td { padding: 4px 6px; }
+}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -454,15 +546,6 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   <div class="lock-error" id="lockError"></div>
 </div>
 
-<!-- Decorative crosshair SVG -->
-<svg class="deco-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="40" cy="40" r="28" stroke="#3D6B9E" stroke-width="1"/>
-  <circle cx="40" cy="40" r="14" stroke="#3D6B9E" stroke-width="0.5"/>
-  <line x1="40" y1="4" x2="40" y2="20" stroke="#3D6B9E" stroke-width="0.5"/>
-  <line x1="40" y1="60" x2="40" y2="76" stroke="#3D6B9E" stroke-width="0.5"/>
-  <line x1="4" y1="40" x2="20" y2="40" stroke="#3D6B9E" stroke-width="0.5"/>
-  <line x1="60" y1="40" x2="76" y2="40" stroke="#3D6B9E" stroke-width="0.5"/>
-</svg>
 
 <div id="app">
   <div class="tab-bar">
@@ -541,79 +624,36 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 </div>
 
 <script>
-// --- Supabase ---
-const SUPABASE_URL = 'https://fjmhqaqnzktbcbkbahnf.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbWhxYXFuemt0YmNia2JhaG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIyMDksImV4cCI6MjA4NzIxODIwOX0.US8vAJe9SwdC_LaKedyNqJNcn_bBXPvt39B7KNS9WIU';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentUserId = null;
-
 // --- Data ---
-let settings = {
+function load(key) {
+  try { return JSON.parse(localStorage.getItem('fc_' + key)); } catch { return null; }
+}
+function save(key, val) { localStorage.setItem('fc_' + key, JSON.stringify(val)); }
+
+let settings = load('settings') || {
   checkingBalance: 0, savingsBalance: 0, showSavings: false,
   rent: { amount: 0, dayOfMonth: 1 },
   paycheck: { amount: 0, seedDate: '' }
 };
-let cardNames = ['Amex', 'Apple', 'Chase'];
-let statements = [];
-let transactions = [];
 
-async function loadFromSupabase() {
-  const { data: sData } = await sb.from('settings').select('*').eq('user_id', currentUserId).single();
-  if (sData) {
-    settings = {
-      checkingBalance: parseFloat(sData.checking_balance) || 0,
-      savingsBalance: parseFloat(sData.savings_balance) || 0,
-      showSavings: sData.show_savings || false,
-      rent: { amount: parseFloat(sData.rent_amount) || 0, dayOfMonth: sData.rent_day_of_month || 1 },
-      paycheck: { amount: parseFloat(sData.paycheck_amount) || 0, seedDate: sData.paycheck_seed_date || '' }
-    };
-    cardNames = sData.card_names || ['Amex', 'Apple', 'Chase'];
+// Card names for the dropdown
+let cardNames = load('cardNames') || ['Amex', 'Apple', 'Chase'];
+
+// Flat statements list — migrate from old creditCards format
+let statements = load('statements');
+if (!statements) {
+  statements = [];
+  const oldCC = load('creditCards') || [];
+  for (const cc of oldCC) {
+    for (const [mk, mdata] of Object.entries(cc.months || {})) {
+      if (mdata && mdata.amount && mdata.dueDate) {
+        statements.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          card: cc.name, amount: mdata.amount, dueDate: mdata.dueDate, hidden: false
+        });
+      }
+    }
   }
-  const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
-  statements = (stData || []).map(s => ({
-    id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
-  }));
-  const { data: txData } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
-  transactions = (txData || []).map(t => ({
-    id: t.id, label: t.label, amount: parseFloat(t.amount),
-    source: t.source, target: t.target, date: t.date,
-    recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
-  }));
-}
-
-function persist() {
-  // Fire-and-forget — in-memory data is already updated
-  sb.from('settings').update({
-    checking_balance: settings.checkingBalance,
-    savings_balance: settings.savingsBalance,
-    show_savings: settings.showSavings,
-    rent_amount: settings.rent.amount,
-    rent_day_of_month: settings.rent.dayOfMonth,
-    paycheck_amount: settings.paycheck.amount,
-    paycheck_seed_date: settings.paycheck.seedDate || null,
-    card_names: cardNames,
-    updated_at: new Date().toISOString()
-  }).eq('user_id', currentUserId).then();
-
-  sb.from('statements').delete().eq('user_id', currentUserId).then(() => {
-    if (statements.length > 0) {
-      sb.from('statements').insert(statements.map(s => ({
-        id: s.id, user_id: currentUserId, card: s.card,
-        amount: s.amount, due_date: s.dueDate, hidden: s.hidden
-      }))).then();
-    }
-  });
-
-  sb.from('transactions').delete().eq('user_id', currentUserId).then(() => {
-    if (transactions.length > 0) {
-      sb.from('transactions').insert(transactions.map(t => ({
-        id: t.id, user_id: currentUserId, label: t.label,
-        amount: t.amount, source: t.source, target: t.target,
-        date: t.date, recurrence: t.recurrence,
-        day_of_month: t.dayOfMonth, interval_days: t.intervalDays
-      }))).then();
-    }
-  });
 }
 
 // Auto-hide past-due statements (called in init after today is defined)
@@ -623,6 +663,27 @@ function autoHideStatements() {
     if (s.dueDate < todayKey && !s.hidden) s.hidden = true;
   }
 }
+
+// Migrate old adHocIncome → transactions
+let transactions = load('transactions');
+if (!transactions) {
+  const oldAdhoc = load('adHocIncome') || [];
+  transactions = oldAdhoc.map(ah => ({
+    id: ah.id, label: ah.label, amount: ah.amount,
+    source: 'external', target: 'checking',
+    date: ah.date, recurrence: 'none', dayOfMonth: 1, intervalDays: 14
+  }));
+}
+
+function persist() {
+  save('settings', settings);
+  save('cardNames', cardNames);
+  save('statements', statements);
+  save('transactions', transactions);
+}
+
+// --- Mobile detection ---
+const isMobile = () => window.innerWidth <= 768;
 
 // --- Date helpers ---
 const today = new Date();
@@ -802,8 +863,159 @@ function computeBalances() {
   return results;
 }
 
+function computeBalancesForMonth(y, m) {
+  const firstDow = new Date(y, m, 1).getDay();
+  const dim = daysInMonth(y, m);
+  const totalCells = firstDow + dim;
+  const baseRows = totalCells <= 35 ? 5 : 6;
+  const rows = isMobile() ? 7 : baseRows;
+
+  const startDate = new Date(y, m, 1 - firstDow);
+  const endDate = new Date(y, m, 1 - firstDow + rows * 7 - 1);
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const days = [];
+  let cur = new Date(startDate);
+  while (cur <= endDate) {
+    const cy = cur.getFullYear(), cm = cur.getMonth(), cd = cur.getDate();
+    const dk = dateKey(cy, cm, cd);
+    const events = getEventsForDay(cy, cm, cd);
+    const netChecking = events.reduce((s, e) => s + eventNetChecking(e), 0);
+    const netSavings = events.reduce((s, e) => s + eventNetSavings(e), 0);
+    days.push({ dk, events, netChecking, netSavings });
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  let cumCheckingBefore = 0, cumSavingsBefore = 0;
+  for (const day of days) {
+    if (day.dk >= todayKey) break;
+    cumCheckingBefore += day.netChecking;
+    cumSavingsBefore += day.netSavings;
+  }
+
+  const results = {};
+  let cumC = 0, cumS = 0;
+  for (const day of days) {
+    cumC += day.netChecking;
+    cumS += day.netSavings;
+    results[day.dk] = {
+      checking: settings.checkingBalance + cumC - cumCheckingBefore,
+      savings: settings.savingsBalance + cumS - cumSavingsBefore,
+      events: day.events
+    };
+  }
+  return results;
+}
+
+function renderMonthSection(y, m) {
+  const balances = computeBalancesForMonth(y, m);
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const firstDow = new Date(y, m, 1).getDay();
+  const dim = daysInMonth(y, m);
+  const prevDim = daysInMonth(y, m - 1);
+  const totalCells = firstDow + dim;
+  const baseRows = totalCells <= 35 ? 5 : 6;
+  const rows = isMobile() ? 7 : baseRows;
+  const remaining = rows * 7 - totalCells;
+
+  const isCurrent = (y === viewYear && m === viewMonth);
+  const labelText = `${MONTH_NAMES[m]} ${y}`;
+  const labelHtml = isCurrent ? '' : `<div class="month-label">${labelText}</div>`;
+
+  let gridHtml = '';
+
+  // Leading days from prev month
+  for (let i = 0; i < firstDow; i++) {
+    const d = prevDim - firstDow + 1 + i;
+    const pm = m === 0 ? 11 : m - 1;
+    const py = m === 0 ? y - 1 : y;
+    const dk = dateKey(py, pm, d);
+    gridHtml += renderCell(d, dk, balances[dk], true, false);
+  }
+
+  // Current month days
+  for (let d = 1; d <= dim; d++) {
+    const dk = dateKey(y, m, d);
+    gridHtml += renderCell(d, dk, balances[dk], false, dk === todayKey);
+  }
+
+  // Trailing days from next month
+  for (let i = 1; i <= remaining; i++) {
+    const nm = m === 11 ? 0 : m + 1;
+    const ny = m === 11 ? y + 1 : y;
+    const dk = dateKey(ny, nm, i);
+    gridHtml += renderCell(i, dk, balances[dk], true, false);
+  }
+
+  const dowRow = `<div class="section-dow-row"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>`;
+
+  return `<div class="month-section" data-year="${y}" data-month="${m}">
+    ${labelHtml}
+    ${dowRow}
+    <div class="cal-grid" style="grid-template-rows: repeat(${rows}, 1fr)">${gridHtml}</div>
+  </div>`;
+}
+
+function renderMobile() {
+  document.getElementById('monthTitle').textContent =
+    `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+  const wrap = document.querySelector('.cal-grid-wrap');
+
+  // Compute prev/current/next months
+  let prevM = viewMonth - 1, prevY = viewYear;
+  if (prevM < 0) { prevM = 11; prevY--; }
+  let nextM = viewMonth + 1, nextY = viewYear;
+  if (nextM > 11) { nextM = 0; nextY++; }
+
+  wrap.innerHTML =
+    renderMonthSection(prevY, prevM) +
+    renderMonthSection(viewYear, viewMonth) +
+    renderMonthSection(nextY, nextM);
+
+  // Scroll to middle section (current month) instantly
+  const sections = wrap.querySelectorAll('.month-section');
+  if (sections[1]) {
+    wrap.scrollTo({ top: sections[1].offsetTop, behavior: 'instant' });
+  }
+
+  // Set up scroll-snap listener
+  clearTimeout(wrap._snapTimer);
+  wrap.onscroll = function() {
+    clearTimeout(wrap._snapTimer);
+    wrap._snapTimer = setTimeout(() => {
+      const sections = wrap.querySelectorAll('.month-section');
+      const scrollTop = wrap.scrollTop;
+      const wrapH = wrap.clientHeight;
+
+      let snappedIdx = 0;
+      let minDist = Infinity;
+      sections.forEach((sec, i) => {
+        const dist = Math.abs(sec.offsetTop - scrollTop);
+        if (dist < minDist) { minDist = dist; snappedIdx = i; }
+      });
+
+      const snapped = sections[snappedIdx];
+      const snappedY = parseInt(snapped.dataset.year);
+      const snappedM = parseInt(snapped.dataset.month);
+
+      // Update header to match snapped month
+      document.getElementById('monthTitle').textContent =
+        `${MONTH_NAMES[snappedM]} ${snappedY}`;
+
+      // If snapped to first or last, re-center
+      if (snappedIdx === 0 || snappedIdx === 2) {
+        viewYear = snappedY;
+        viewMonth = snappedM;
+        renderMobile();
+      }
+    }, 150);
+  };
+}
+
 // --- Render calendar ---
 function render() {
+  if (isMobile()) { renderMobile(); return; }
   document.getElementById('monthTitle').textContent =
     `${MONTH_NAMES[viewMonth]} ${viewYear}`;
 
@@ -876,12 +1088,17 @@ function renderCell(d, dk, data, otherMonth, isToday) {
 
 // --- Navigation ---
 function navMonth(dir) {
+  viewMonth += dir;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (isMobile()) {
+    render();
+    if (settingsOpen) renderSettings();
+    return;
+  }
   const grid = document.getElementById('calGrid');
   grid.classList.add('fade-out');
   setTimeout(() => {
-    viewMonth += dir;
-    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
     render();
     if (settingsOpen) renderSettings();
     grid.classList.remove('fade-out');
@@ -889,11 +1106,16 @@ function navMonth(dir) {
 }
 
 function goToday() {
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  if (isMobile()) {
+    render();
+    if (settingsOpen) renderSettings();
+    return;
+  }
   const grid = document.getElementById('calGrid');
   grid.classList.add('fade-out');
   setTimeout(() => {
-    viewYear = today.getFullYear();
-    viewMonth = today.getMonth();
     render();
     if (settingsOpen) renderSettings();
     grid.classList.remove('fade-out');
@@ -1249,7 +1471,7 @@ function addStmt() {
   const dueDate = document.getElementById('stmt_due').value;
   if (!amount || !dueDate) return;
   statements.push({
-    id: crypto.randomUUID(),
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     card, amount, dueDate, hidden: false
   });
   persist(); render(); renderSettings();
@@ -1299,7 +1521,7 @@ function addTx() {
   }
 
   const tx = {
-    id: crypto.randomUUID(), label, amount, source, target, date, recurrence,
+    id: Date.now().toString(36), label, amount, source, target, date, recurrence,
     dayOfMonth: 1, intervalDays: 14
   };
 
@@ -1424,7 +1646,8 @@ function getGrowthChartLayout() {
   const rect = canvas.getBoundingClientRect();
   const w = rect.width;
   const h = rect.height;
-  const pad = { top: 28, right: 20, bottom: 36, left: 70 };
+  const mobile = isMobile();
+  const pad = { top: 28, right: mobile ? 28 : 20, bottom: 36, left: mobile ? 44 : 70 };
   return { canvas, w, h, pad, chartW: w - pad.left - pad.right, chartH: h - pad.top - pad.bottom };
 }
 
@@ -1462,9 +1685,11 @@ function drawGrowthChart(rows) {
     ctx.fillText(fmtShort(val), pad.left - 8, yy + 4);
   }
 
-  // X labels
+  // X labels — space based on actual chart width
   ctx.textAlign = 'center';
-  const labelStep = Math.max(1, Math.floor(rows.length / 10));
+  const labelW = 50; // approx width of "2026" in pixels
+  const maxLabels = Math.max(2, Math.floor(chartW / labelW));
+  const labelStep = Math.max(1, Math.ceil(rows.length / maxLabels));
   for (let i = 0; i < rows.length; i += labelStep) {
     ctx.fillText(rows[i].year, x(i), h - pad.bottom + 18);
   }
@@ -1626,27 +1851,17 @@ function fmtShort(n) {
   const lock = document.getElementById('lockScreen');
   const input = document.getElementById('lockInput');
   const error = document.getElementById('lockError');
+  const pw = 'gia';
 
-  async function unlock(userId) {
-    currentUserId = userId;
-    sessionStorage.setItem('fc_user_id', userId);
-    await loadFromSupabase();
-    autoHideStatements();
-    render();
+  if (sessionStorage.getItem('fc_unlocked') === '1') {
     lock.classList.add('hidden');
   }
 
-  // Restore session
-  const saved = sessionStorage.getItem('fc_user_id');
-  if (saved) {
-    unlock(saved);
-  }
-
-  input.addEventListener('keydown', async function(e) {
+  input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-      const { data } = await sb.from('users').select('id').eq('password', input.value).single();
-      if (data) {
-        unlock(data.id);
+      if (input.value === pw) {
+        sessionStorage.setItem('fc_unlocked', '1');
+        lock.classList.add('hidden');
       } else {
         error.textContent = 'INCORRECT';
         input.value = '';
@@ -1655,6 +1870,21 @@ function fmtShort(n) {
     }
   });
 })();
+
+// --- Resize: re-render when crossing mobile/desktop breakpoint ---
+let wasMobile = isMobile();
+window.addEventListener('resize', () => {
+  const nowMobile = isMobile();
+  if (nowMobile !== wasMobile) {
+    wasMobile = nowMobile;
+    render();
+  }
+});
+
+// --- Init ---
+autoHideStatements();
+render();
+if (!load('settings')) toggleSettings();
 </script>
 </body>
 </html>
