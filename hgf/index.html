@@ -444,6 +444,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .growth-table .col-principal { color: var(--accent); }
 .growth-table tr.interest-flip td { background: rgba(74,122,58,0.08); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -540,36 +541,79 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 </div>
 
 <script>
-// --- Data ---
-function load(key) {
-  try { return JSON.parse(localStorage.getItem('fc_' + key)); } catch { return null; }
-}
-function save(key, val) { localStorage.setItem('fc_' + key, JSON.stringify(val)); }
+// --- Supabase ---
+const SUPABASE_URL = 'https://fjmhqaqnzktbcbkbahnf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbWhxYXFuemt0YmNia2JhaG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIyMDksImV4cCI6MjA4NzIxODIwOX0.US8vAJe9SwdC_LaKedyNqJNcn_bBXPvt39B7KNS9WIU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUserId = null;
 
-let settings = load('settings') || {
+// --- Data ---
+let settings = {
   checkingBalance: 0, savingsBalance: 0, showSavings: false,
   rent: { amount: 0, dayOfMonth: 1 },
   paycheck: { amount: 0, seedDate: '' }
 };
+let cardNames = ['Amex', 'Apple', 'Chase'];
+let statements = [];
+let transactions = [];
 
-// Card names for the dropdown
-let cardNames = load('cardNames') || ['Amex', 'Apple', 'Chase'];
-
-// Flat statements list — migrate from old creditCards format
-let statements = load('statements');
-if (!statements) {
-  statements = [];
-  const oldCC = load('creditCards') || [];
-  for (const cc of oldCC) {
-    for (const [mk, mdata] of Object.entries(cc.months || {})) {
-      if (mdata && mdata.amount && mdata.dueDate) {
-        statements.push({
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-          card: cc.name, amount: mdata.amount, dueDate: mdata.dueDate, hidden: false
-        });
-      }
-    }
+async function loadFromSupabase() {
+  const { data: sData } = await sb.from('settings').select('*').eq('user_id', currentUserId).single();
+  if (sData) {
+    settings = {
+      checkingBalance: parseFloat(sData.checking_balance) || 0,
+      savingsBalance: parseFloat(sData.savings_balance) || 0,
+      showSavings: sData.show_savings || false,
+      rent: { amount: parseFloat(sData.rent_amount) || 0, dayOfMonth: sData.rent_day_of_month || 1 },
+      paycheck: { amount: parseFloat(sData.paycheck_amount) || 0, seedDate: sData.paycheck_seed_date || '' }
+    };
+    cardNames = sData.card_names || ['Amex', 'Apple', 'Chase'];
   }
+  const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
+  statements = (stData || []).map(s => ({
+    id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
+  }));
+  const { data: txData } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
+  transactions = (txData || []).map(t => ({
+    id: t.id, label: t.label, amount: parseFloat(t.amount),
+    source: t.source, target: t.target, date: t.date,
+    recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
+  }));
+}
+
+function persist() {
+  // Fire-and-forget — in-memory data is already updated
+  sb.from('settings').update({
+    checking_balance: settings.checkingBalance,
+    savings_balance: settings.savingsBalance,
+    show_savings: settings.showSavings,
+    rent_amount: settings.rent.amount,
+    rent_day_of_month: settings.rent.dayOfMonth,
+    paycheck_amount: settings.paycheck.amount,
+    paycheck_seed_date: settings.paycheck.seedDate || null,
+    card_names: cardNames,
+    updated_at: new Date().toISOString()
+  }).eq('user_id', currentUserId).then();
+
+  sb.from('statements').delete().eq('user_id', currentUserId).then(() => {
+    if (statements.length > 0) {
+      sb.from('statements').insert(statements.map(s => ({
+        id: s.id, user_id: currentUserId, card: s.card,
+        amount: s.amount, due_date: s.dueDate, hidden: s.hidden
+      }))).then();
+    }
+  });
+
+  sb.from('transactions').delete().eq('user_id', currentUserId).then(() => {
+    if (transactions.length > 0) {
+      sb.from('transactions').insert(transactions.map(t => ({
+        id: t.id, user_id: currentUserId, label: t.label,
+        amount: t.amount, source: t.source, target: t.target,
+        date: t.date, recurrence: t.recurrence,
+        day_of_month: t.dayOfMonth, interval_days: t.intervalDays
+      }))).then();
+    }
+  });
 }
 
 // Auto-hide past-due statements (called in init after today is defined)
@@ -578,24 +622,6 @@ function autoHideStatements() {
   for (const s of statements) {
     if (s.dueDate < todayKey && !s.hidden) s.hidden = true;
   }
-}
-
-// Migrate old adHocIncome → transactions
-let transactions = load('transactions');
-if (!transactions) {
-  const oldAdhoc = load('adHocIncome') || [];
-  transactions = oldAdhoc.map(ah => ({
-    id: ah.id, label: ah.label, amount: ah.amount,
-    source: 'external', target: 'checking',
-    date: ah.date, recurrence: 'none', dayOfMonth: 1, intervalDays: 14
-  }));
-}
-
-function persist() {
-  save('settings', settings);
-  save('cardNames', cardNames);
-  save('statements', statements);
-  save('transactions', transactions);
 }
 
 // --- Date helpers ---
@@ -1223,7 +1249,7 @@ function addStmt() {
   const dueDate = document.getElementById('stmt_due').value;
   if (!amount || !dueDate) return;
   statements.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: crypto.randomUUID(),
     card, amount, dueDate, hidden: false
   });
   persist(); render(); renderSettings();
@@ -1273,7 +1299,7 @@ function addTx() {
   }
 
   const tx = {
-    id: Date.now().toString(36), label, amount, source, target, date, recurrence,
+    id: crypto.randomUUID(), label, amount, source, target, date, recurrence,
     dayOfMonth: 1, intervalDays: 14
   };
 
@@ -1600,17 +1626,27 @@ function fmtShort(n) {
   const lock = document.getElementById('lockScreen');
   const input = document.getElementById('lockInput');
   const error = document.getElementById('lockError');
-  const pw = 'gia';
 
-  if (sessionStorage.getItem('fc_unlocked') === '1') {
+  async function unlock(userId) {
+    currentUserId = userId;
+    sessionStorage.setItem('fc_user_id', userId);
+    await loadFromSupabase();
+    autoHideStatements();
+    render();
     lock.classList.add('hidden');
   }
 
-  input.addEventListener('keydown', function(e) {
+  // Restore session
+  const saved = sessionStorage.getItem('fc_user_id');
+  if (saved) {
+    unlock(saved);
+  }
+
+  input.addEventListener('keydown', async function(e) {
     if (e.key === 'Enter') {
-      if (input.value === pw) {
-        sessionStorage.setItem('fc_unlocked', '1');
-        lock.classList.add('hidden');
+      const { data } = await sb.from('users').select('id').eq('password', input.value).single();
+      if (data) {
+        unlock(data.id);
       } else {
         error.textContent = 'INCORRECT';
         input.value = '';
@@ -1619,11 +1655,6 @@ function fmtShort(n) {
     }
   });
 })();
-
-// --- Init ---
-autoHideStatements();
-render();
-if (!load('settings')) toggleSettings();
 </script>
 </body>
 </html>
