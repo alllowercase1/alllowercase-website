@@ -434,6 +434,221 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .growth-table .col-principal { color: var(--accent); }
 .growth-table tr.interest-flip td { background: rgba(74,122,58,0.08); }
 
+/* Expenses tab */
+.expenses-wrap {
+  flex: 1; display: flex; flex-direction: column; padding: 20px 0 16px; overflow: hidden;
+}
+.expenses-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 0 16px; flex-shrink: 0;
+}
+.expenses-header h1 {
+  font-size: 28px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+}
+.exp-nav { display: flex; gap: 12px; align-items: center; }
+.exp-nav button {
+  background: none; border: none; color: var(--accent); font-size: 11px;
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 4px 0; transition: color 0.15s;
+}
+.exp-nav button:hover { color: var(--text); }
+.exp-nav .arrow-btn { font-size: 18px; letter-spacing: 0; padding: 0 4px; }
+
+.exp-budget-section {
+  flex-shrink: 0; margin-bottom: 20px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+.exp-budget-label {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+.exp-budget-label::before { content: '// '; }
+.exp-budget-row {
+  display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+}
+.exp-budget-field {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.exp-budget-field label {
+  font-size: 9px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.exp-budget-input {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 14px; padding: 4px 0; font-family: var(--font);
+  outline: none; width: 100px; transition: border-color 0.15s;
+}
+.exp-budget-input:focus { border-bottom-color: var(--accent); }
+.exp-budget-cats {
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.exp-budget-cat-field {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.exp-budget-cat-field label {
+  font-size: 9px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.exp-budget-cat-field input {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 13px; padding: 4px 0; font-family: var(--font);
+  outline: none; width: 80px; transition: border-color 0.15s;
+}
+.exp-budget-cat-field input:focus { border-bottom-color: var(--accent); }
+
+.exp-col-budget {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 10px; padding: 4px 0 8px; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.exp-col-budget-item { display: flex; flex-direction: column; gap: 1px; }
+.exp-col-budget-lbl { font-size: 8px; color: var(--text2); letter-spacing: 0.1em; }
+.exp-col-budget-val { font-weight: 700; color: var(--text); }
+.exp-col-budget-val.negative { color: var(--accent-red); }
+.exp-col-budget-val.positive { color: #4A7A3A; }
+
+.exp-form {
+  display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+  flex-shrink: 0; margin-bottom: 20px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+.exp-form-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.exp-form-field label {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+}
+.exp-form-field input,
+.exp-form-field select {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 13px; padding: 6px 0; font-family: var(--font);
+  outline: none; transition: border-color 0.15s;
+  -webkit-appearance: none; appearance: none;
+}
+.exp-form-field input { width: 140px; }
+.exp-form-field select { width: 140px; cursor: pointer; }
+.exp-form-field input:focus,
+.exp-form-field select:focus { border-bottom-color: var(--accent); }
+.exp-form-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); }
+
+.exp-add-btn {
+  background: none; border: none; color: var(--accent); font-size: 11px; font-weight: 700;
+  padding: 6px 0; cursor: pointer; font-family: var(--font);
+  text-transform: uppercase; letter-spacing: 0.15em; transition: color 0.15s;
+}
+.exp-add-btn:hover { color: var(--text); }
+
+.exp-summary {
+  display: flex; gap: 32px; flex-shrink: 0; margin-bottom: 16px;
+}
+.exp-summary-item {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.exp-summary-label {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+}
+.exp-summary-value {
+  font-size: 18px; font-weight: 700; color: var(--text);
+}
+.exp-summary-value.positive { color: #4A7A3A; }
+.exp-summary-value.negative { color: var(--accent-red); }
+
+.exp-columns {
+  display: flex; gap: 24px; flex: 1; min-height: 0; align-items: stretch;
+}
+.exp-column {
+  flex: 1; min-width: 160px; max-width: 280px;
+  display: flex; flex-direction: column;
+}
+.exp-col-items {
+  flex: 1; overflow-y: auto; min-height: 0;
+}
+.exp-col-header {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.exp-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid rgba(184,178,170,0.3);
+}
+.exp-item-info { flex: 1; min-width: 0; }
+.exp-item-name {
+  font-size: 11px; font-weight: 700; color: var(--text);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exp-item-date {
+  font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.exp-item-amount {
+  font-size: 12px; font-weight: 700; color: var(--accent-red); flex-shrink: 0;
+}
+.exp-item-actions {
+  display: flex; gap: 2px; flex-shrink: 0;
+}
+.exp-item-btn {
+  background: none; border: none; color: var(--text2); font-size: 14px;
+  cursor: pointer; padding: 2px 4px; opacity: 0.6; transition: opacity 0.15s, color 0.15s;
+  font-family: var(--font);
+}
+.exp-item-btn:hover { opacity: 1; color: var(--accent-red); }
+.exp-col-total {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border);
+  text-align: right;
+}
+
+/* Expense edit modal */
+.exp-edit-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.3); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.exp-edit-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 24px; width: 320px;
+}
+.exp-edit-modal h3 {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+  margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.exp-edit-modal h3::before { content: '// '; }
+.exp-edit-modal .s-field {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; gap: 12px;
+}
+.exp-edit-modal .s-field label {
+  font-size: 11px; color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.1em; font-weight: 400; flex-shrink: 0;
+}
+.exp-edit-modal .s-field input,
+.exp-edit-modal .s-field select {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 13px; padding: 4px 0; font-family: var(--font);
+  outline: none; text-align: right; width: 150px; transition: border-color 0.15s;
+  -webkit-appearance: none; appearance: none;
+}
+.exp-edit-modal .s-field input:focus,
+.exp-edit-modal .s-field select:focus { border-bottom-color: var(--accent); }
+.exp-edit-actions {
+  display: flex; gap: 16px; margin-top: 16px; justify-content: flex-end;
+}
+.exp-edit-actions button {
+  background: none; border: none; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); text-transform: uppercase;
+  letter-spacing: 0.15em; padding: 6px 0; transition: color 0.15s;
+}
+.exp-edit-cancel { color: var(--text2); }
+.exp-edit-cancel:hover { color: var(--text); }
+.exp-edit-save { color: var(--accent); }
+.exp-edit-save:hover { color: var(--text); }
+
 /* ===== Mobile ===== */
 @media (max-width: 768px) {
   html, body { height: 100%; overflow: hidden; }
@@ -535,6 +750,66 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .growth-table { font-size: 10px; }
   .growth-table th { font-size: 9px; padding: 6px 6px; }
   .growth-table td { padding: 4px 6px; }
+
+  /* Expenses tab */
+  .expenses-wrap { padding: 8px 10px 8px; }
+  .expenses-header { padding: 0 0 6px; }
+  .expenses-header h1 { font-size: 15px; letter-spacing: 0.1em; }
+  .exp-nav button { font-size: 10px; }
+  .exp-nav .arrow-btn { font-size: 16px; }
+  .exp-budget-section { margin-bottom: 10px; padding-bottom: 10px; }
+  .exp-budget-label { font-size: 9px; margin-bottom: 4px; }
+  .exp-budget-input { font-size: 14px; width: 140px; }
+  .exp-form {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
+    margin-bottom: 10px; padding-bottom: 10px;
+  }
+  .exp-form-field input,
+  .exp-form-field select { width: 100%; font-size: 12px; }
+  .exp-form-field label { font-size: 9px; }
+  .exp-add-btn { grid-column: 1 / -1; text-align: left; font-size: 10px; padding: 4px 0; }
+  .exp-summary { gap: 0; justify-content: space-between; margin-bottom: 10px; }
+  .exp-summary-label { font-size: 9px; }
+  .exp-summary-value { font-size: 14px; }
+  .exp-columns { flex-direction: column; gap: 0; overflow-y: auto; }
+  .exp-cat-tile {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .exp-cat-tile:active { background: rgba(0,0,0,0.04); }
+  .exp-cat-tile-arrow {
+    font-size: 8px; color: var(--text2); width: 12px; flex-shrink: 0;
+  }
+  .exp-cat-tile-name {
+    font-size: 11px; font-weight: 700; color: var(--text);
+    text-transform: uppercase; letter-spacing: 0.1em; flex: 1;
+  }
+  .exp-cat-tile-count {
+    font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .exp-cat-tile-rem {
+    font-size: 9px; font-weight: 700; flex-shrink: 0;
+  }
+  .exp-cat-tile-left {
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .exp-cat-tile-left.positive { color: #4A7A3A; }
+  .exp-cat-tile-left.negative { color: var(--accent-red); }
+  .exp-cat-tile-spent {
+    font-size: 10px; font-weight: 700; color: rgba(196,73,42,0.5); flex-shrink: 0;
+  }
+  .exp-cat-items { padding: 0 0 6px 20px; }
+  .exp-budget-row { gap: 12px; }
+  .exp-budget-cats { gap: 10px; }
+  .exp-budget-cat-field input { width: 60px; font-size: 12px; }
+  .exp-budget-cat-field label { font-size: 8px; }
+  .exp-item { padding: 5px 0; }
+  .exp-item-name { font-size: 10px; }
+  .exp-item-date { font-size: 8px; }
+  .exp-item-amount { font-size: 11px; }
+  .exp-item-btn { font-size: 12px; padding: 2px 2px; }
+  .exp-edit-modal { width: 90vw; max-width: 320px; }
 }
 </style>
 </head>
@@ -551,6 +826,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('calendar')">Calendar</button>
     <button class="tab-btn" onclick="switchTab('growth')">Growth</button>
+    <button class="tab-btn" onclick="switchTab('expenses')">Expenses</button>
   </div>
 
   <div class="tab-content active" id="tab-calendar">
@@ -568,6 +844,56 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
     <div class="cal-grid-wrap">
       <div class="cal-grid" id="calGrid"></div>
     </div>
+  </div>
+
+  <div class="tab-content" id="tab-expenses">
+    <div class="expenses-wrap">
+      <div class="expenses-header">
+        <h1 id="expMonthTitle"></h1>
+        <div class="exp-nav">
+          <button class="arrow-btn" onclick="navExpMonth(-1)">&#8249;</button>
+          <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>
+        </div>
+      </div>
+      <div class="exp-budget-section">
+        <div class="exp-budget-label">Monthly Budget</div>
+        <div class="exp-budget-row">
+          <div class="exp-budget-field">
+            <label>Total</label>
+            <input class="exp-budget-input" type="number" id="expBudgetInput" placeholder="0" onchange="updateExpBudget(this.value)">
+          </div>
+          <div class="exp-budget-cats" id="expBudgetCats"></div>
+        </div>
+      </div>
+      <div class="exp-form" id="expForm">
+        <div class="exp-form-field">
+          <label>Name</label>
+          <input type="text" id="exp_name" placeholder="E.G. COFFEE">
+        </div>
+        <div class="exp-form-field">
+          <label>Amount</label>
+          <input type="number" id="exp_amount" placeholder="0">
+        </div>
+        <div class="exp-form-field">
+          <label>Category</label>
+          <select id="exp_category">
+            <option value="Groceries">Groceries</option>
+            <option value="Dining">Dining</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Travel">Travel</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="exp-form-field">
+          <label>Date</label>
+          <input type="date" id="exp_date">
+        </div>
+        <button class="exp-add-btn" onclick="addExpense()">+ Add</button>
+      </div>
+      <div class="exp-summary" id="expSummary"></div>
+      <div class="exp-columns" id="expColumns"></div>
+    </div>
+    <div id="expEditOverlay"></div>
   </div>
 
   <div class="tab-content" id="tab-growth">
@@ -680,6 +1006,9 @@ function persist() {
   save('cardNames', cardNames);
   save('statements', statements);
   save('transactions', transactions);
+  save('expenses', expenses);
+  save('expBudget', expBudget);
+  save('catBudgets', catBudgets);
 }
 
 // --- Mobile detection ---
@@ -1606,17 +1935,269 @@ function deleteTx(id) {
   persist(); render(); renderSettings();
 }
 
+// --- Expenses ---
+let expenses = load('expenses') || [];
+let expBudget = load('expBudget') || 0;
+let expViewYear = today.getFullYear();
+let expViewMonth = today.getMonth();
+let editingExpId = null;
+let expandedExpCats = new Set();
+let catBudgets = load('catBudgets') || { Groceries: 0, Dining: 0, Shopping: 0, Travel: 0, Other: 0 };
+
+function persistExpenses() {
+  save('expenses', expenses);
+  save('expBudget', expBudget);
+  save('catBudgets', catBudgets);
+}
+
+function updateCatBudget(cat, val) {
+  catBudgets[cat] = parseFloat(val) || 0;
+  persistExpenses();
+  renderExpenses();
+}
+
+function navExpMonth(dir) {
+  expViewMonth += dir;
+  if (expViewMonth > 11) { expViewMonth = 0; expViewYear++; }
+  if (expViewMonth < 0) { expViewMonth = 11; expViewYear--; }
+  renderExpenses();
+}
+
+function updateExpBudget(val) {
+  expBudget = parseFloat(val) || 0;
+  persistExpenses();
+  renderExpenses();
+}
+
+function addExpense() {
+  const label = document.getElementById('exp_name').value.trim();
+  const amount = parseFloat(document.getElementById('exp_amount').value);
+  const category = document.getElementById('exp_category').value;
+  const date = document.getElementById('exp_date').value;
+  if (!label || !amount || !date) return;
+
+  const exp = {
+    id: crypto.randomUUID(),
+    label, amount, category, date,
+    created_at: new Date().toISOString()
+  };
+  expenses.push(exp);
+  persistExpenses();
+
+  // Clear form
+  document.getElementById('exp_name').value = '';
+  document.getElementById('exp_amount').value = '';
+  document.getElementById('exp_date').value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  renderExpenses();
+}
+
+function deleteExpense(id) {
+  expenses = expenses.filter(e => e.id !== id);
+  persistExpenses();
+  renderExpenses();
+}
+
+function openEditExpense(id) {
+  editingExpId = id;
+  renderExpEditModal();
+}
+
+function closeEditExpense() {
+  editingExpId = null;
+  document.getElementById('expEditOverlay').innerHTML = '';
+}
+
+function saveEditExpense() {
+  const exp = expenses.find(e => e.id === editingExpId);
+  if (!exp) return;
+  exp.label = document.getElementById('edit_exp_name').value.trim() || exp.label;
+  exp.amount = parseFloat(document.getElementById('edit_exp_amount').value) || exp.amount;
+  exp.category = document.getElementById('edit_exp_category').value;
+  exp.date = document.getElementById('edit_exp_date').value || exp.date;
+  persistExpenses();
+  closeEditExpense();
+  renderExpenses();
+}
+
+function renderExpEditModal() {
+  const exp = expenses.find(e => e.id === editingExpId);
+  if (!exp) return;
+  const cats = ['Groceries','Dining','Shopping','Travel','Other'];
+  const catOpts = cats.map(c => `<option value="${c}"${c === exp.category ? ' selected' : ''}>${c}</option>`).join('');
+
+  document.getElementById('expEditOverlay').innerHTML = `
+    <div class="exp-edit-overlay" onclick="if(event.target===this)closeEditExpense()">
+      <div class="exp-edit-modal">
+        <h3>Edit Expense</h3>
+        <div class="s-field">
+          <label>Name</label>
+          <input type="text" id="edit_exp_name" value="${exp.label}" style="text-align:left">
+        </div>
+        <div class="s-field">
+          <label>Amount</label>
+          <input type="number" id="edit_exp_amount" value="${exp.amount}">
+        </div>
+        <div class="s-field">
+          <label>Category</label>
+          <select id="edit_exp_category">${catOpts}</select>
+        </div>
+        <div class="s-field">
+          <label>Date</label>
+          <input type="date" id="edit_exp_date" value="${exp.date}">
+        </div>
+        <div class="exp-edit-actions">
+          <button class="exp-edit-cancel" onclick="closeEditExpense()">Cancel</button>
+          <button class="exp-edit-save" onclick="saveEditExpense()">Save</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleExpCat(cat) {
+  if (expandedExpCats.has(cat)) expandedExpCats.delete(cat);
+  else expandedExpCats.add(cat);
+  renderExpenses();
+}
+
+function renderExpenses() {
+  const monthKey = `${expViewYear}-${String(expViewMonth + 1).padStart(2, '0')}`;
+  document.getElementById('expMonthTitle').textContent = `${MONTH_NAMES[expViewMonth]} ${expViewYear}`;
+  document.getElementById('expBudgetInput').value = expBudget || '';
+
+  // Render category budget inputs
+  const cats = ['Groceries','Dining','Shopping','Travel','Other'];
+  document.getElementById('expBudgetCats').innerHTML = cats.map(c =>
+    `<div class="exp-budget-cat-field">
+      <label>${c}</label>
+      <input type="number" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${c}', this.value)">
+    </div>`
+  ).join('');
+
+  // Set default date on form
+  const dateInput = document.getElementById('exp_date');
+  if (!dateInput.value) {
+    dateInput.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  }
+
+  // Filter expenses for this month
+  const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
+
+  // Summary
+  const spent = monthExps.reduce((s, e) => s + e.amount, 0);
+  const remaining = expBudget - spent;
+  const remClass = remaining >= 0 ? 'positive' : 'negative';
+
+  document.getElementById('expSummary').innerHTML = `
+    <div class="exp-summary-item">
+      <span class="exp-summary-label">Budget</span>
+      <span class="exp-summary-value">${fmt(expBudget)}</span>
+    </div>
+    <div class="exp-summary-item">
+      <span class="exp-summary-label">Spent</span>
+      <span class="exp-summary-value negative">${fmt(spent)}</span>
+    </div>
+    <div class="exp-summary-item">
+      <span class="exp-summary-label">Remaining</span>
+      <span class="exp-summary-value ${remClass}">${fmt(remaining)}</span>
+    </div>`;
+
+  // Group by category
+  const groups = {};
+  for (const e of monthExps) {
+    if (!groups[e.category]) groups[e.category] = [];
+    groups[e.category].push(e);
+  }
+
+  // Sort within each category by date
+  for (const cat in groups) {
+    groups[cat].sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  const catOrder = ['Groceries','Dining','Shopping','Travel','Other'];
+
+  function buildItemsHtml(items) {
+    let html = '';
+    for (const e of items) {
+      const d = parseDate(e.date);
+      const dateStr = `${MONTH_NAMES[d.getMonth()].substring(0, 3)} ${d.getDate()}`.toUpperCase();
+      html += `
+        <div class="exp-item" onclick="openEditExpense('${e.id}')" style="cursor:pointer">
+          <div class="exp-item-info">
+            <div class="exp-item-name">${e.label}</div>
+            <div class="exp-item-date">${dateStr}</div>
+          </div>
+          <div class="exp-item-amount">${fmt(e.amount)}</div>
+          <div class="exp-item-actions">
+            <button class="exp-item-btn" onclick="event.stopPropagation();deleteExpense('${e.id}')" title="Delete">&times;</button>
+          </div>
+        </div>`;
+    }
+    return html;
+  }
+
+  let colsHtml = '';
+  const mobile = isMobile();
+
+  for (const cat of catOrder) {
+    if (!groups[cat]) continue;
+    const items = groups[cat];
+    const total = items.reduce((s, e) => s + e.amount, 0);
+
+    const catBud = catBudgets[cat] || 0;
+    const catRem = catBud - total;
+    const remCls = catRem >= 0 ? 'positive' : 'negative';
+
+    const budgetBar = catBud ? `
+      <div class="exp-col-budget">
+        <div class="exp-col-budget-item"><span class="exp-col-budget-lbl">Budget</span><span class="exp-col-budget-val">${fmt(catBud)}</span></div>
+        <div class="exp-col-budget-item"><span class="exp-col-budget-lbl">Spent</span><span class="exp-col-budget-val negative">${fmt(total)}</span></div>
+        <div class="exp-col-budget-item"><span class="exp-col-budget-lbl">Left</span><span class="exp-col-budget-val ${remCls}">${fmt(catRem)}</span></div>
+      </div>` : '';
+
+    if (mobile) {
+      const isOpen = expandedExpCats.has(cat);
+      const arrow = isOpen ? '&#9660;' : '&#9654;';
+      const tileRem = catBud ? `<span class="exp-cat-tile-left ${remCls}">${fmt(catRem)} LEFT</span>` : '';
+      colsHtml += `
+        <div class="exp-cat-tile${isOpen ? ' open' : ''}" onclick="toggleExpCat('${cat}')">
+          <span class="exp-cat-tile-arrow">${arrow}</span>
+          <span class="exp-cat-tile-name">${cat}</span>
+          <span class="exp-cat-tile-count">${items.length}</span>
+          ${tileRem}
+          <span class="exp-cat-tile-spent">${fmt(total)} SPENT</span>
+        </div>`;
+      if (isOpen) {
+        colsHtml += `<div class="exp-cat-items" onclick="event.stopPropagation()">${buildItemsHtml(items)}</div>`;
+      }
+    } else {
+      colsHtml += `
+        <div class="exp-column">
+          <div class="exp-col-header">${cat}<span style="float:right">${catBud ? `<span style="font-weight:700;color:${catRem >= 0 ? '#4A7A3A' : 'var(--accent-red)'}">${fmt(catRem)} LEFT</span> <span style="font-weight:700;color:rgba(196,73,42,0.5);font-size:9px;margin-left:8px">${fmt(total)} SPENT</span>` : `<span style="font-weight:700;color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</span>`}</span></div>
+          <div class="exp-col-items">${buildItemsHtml(items)}</div>
+        </div>`;
+    }
+  }
+
+  const empty = '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;padding:20px 0;">No expenses this month</div>';
+  document.getElementById('expColumns').innerHTML = colsHtml || empty;
+}
+
 // --- Tabs ---
 function switchTab(id) {
+  const tabs = ['calendar', 'growth', 'expenses'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', (i === 0 && id === 'calendar') || (i === 1 && id === 'growth'));
+    b.classList.toggle('active', tabs[i] === id);
   });
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
 
   document.querySelector('.gear-btn').style.display = id === 'calendar' ? '' : 'none';
 
+  if (id !== 'calendar' && settingsOpen) toggleSettings();
+
   if (id === 'growth') calcGrowthNow();
+  if (id === 'expenses') renderExpenses();
 }
 
 // --- Growth Calculator ---
