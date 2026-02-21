@@ -825,9 +825,13 @@ function computeBalances() {
   const totalCells = firstDow + dim;
   const rowCount = totalCells <= 35 ? 5 : 6;
 
-  const startDate = new Date(viewYear, viewMonth, 1 - firstDow);
-  const endDate = new Date(viewYear, viewMonth, 1 - firstDow + rowCount * 7 - 1);
+  const gridStart = new Date(viewYear, viewMonth, 1 - firstDow);
+  const gridEnd = new Date(viewYear, viewMonth, 1 - firstDow + rowCount * 7 - 1);
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const startDate = gridStart < todayDate ? gridStart : todayDate;
+  const endDate = gridEnd > todayDate ? gridEnd : todayDate;
 
   const days = [];
   let cur = new Date(startDate);
@@ -870,9 +874,14 @@ function computeBalancesForMonth(y, m) {
   const baseRows = totalCells <= 35 ? 5 : 6;
   const rows = isMobile() ? 7 : baseRows;
 
-  const startDate = new Date(y, m, 1 - firstDow);
-  const endDate = new Date(y, m, 1 - firstDow + rows * 7 - 1);
+  const gridStart = new Date(y, m, 1 - firstDow);
+  const gridEnd = new Date(y, m, 1 - firstDow + rows * 7 - 1);
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  // Always include today in the range so cumulative balances are correct
+  const startDate = gridStart < todayDate ? gridStart : todayDate;
+  const endDate = gridEnd > todayDate ? gridEnd : todayDate;
 
   const days = [];
   let cur = new Date(startDate);
@@ -916,7 +925,6 @@ function renderMonthSection(y, m) {
   const totalCells = firstDow + dim;
   const baseRows = totalCells <= 35 ? 5 : 6;
   const rows = isMobile() ? 7 : baseRows;
-  const remaining = rows * 7 - totalCells;
 
   const isCurrent = (y === viewYear && m === viewMonth);
   const labelText = `${MONTH_NAMES[m]} ${y}`;
@@ -939,12 +947,36 @@ function renderMonthSection(y, m) {
     gridHtml += renderCell(d, dk, balances[dk], false, dk === todayKey);
   }
 
-  // Trailing days from next month
-  for (let i = 1; i <= remaining; i++) {
+  // Trailing days to fill base rows
+  const baseRemaining = baseRows * 7 - totalCells;
+  for (let i = 1; i <= baseRemaining; i++) {
     const nm = m === 11 ? 0 : m + 1;
     const ny = m === 11 ? y + 1 : y;
     const dk = dateKey(ny, nm, i);
     gridHtml += renderCell(i, dk, balances[dk], true, false);
+  }
+
+  // Extra rows on mobile: replicate the first rows of the next month's grid
+  if (isMobile() && rows > baseRows) {
+    const nm = m === 11 ? 0 : m + 1;
+    const ny = m === 11 ? y + 1 : y;
+    const nextBalances = computeBalancesForMonth(ny, nm);
+    const nextFirstDow = new Date(ny, nm, 1).getDay();
+    const nextPrevDim = daysInMonth(ny, nm - 1);
+    const extraCells = (rows - baseRows) * 7;
+
+    let cellCount = 0;
+    // Leading days of next month (from current month)
+    for (let i = 0; i < nextFirstDow && cellCount < extraCells; i++, cellCount++) {
+      const d = nextPrevDim - nextFirstDow + 1 + i;
+      const dk = dateKey(y, m, d);
+      gridHtml += renderCell(d, dk, nextBalances[dk], true, false);
+    }
+    // Days of next month
+    for (let d = 1; cellCount < extraCells; d++, cellCount++) {
+      const dk = dateKey(ny, nm, d);
+      gridHtml += renderCell(d, dk, nextBalances[dk], false, dk === todayKey);
+    }
   }
 
   const dowRow = `<div class="section-dow-row"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>`;
