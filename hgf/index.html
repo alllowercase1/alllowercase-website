@@ -251,24 +251,159 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
 }
 .gear-btn:hover { background: #2C2C2E; color: var(--text); }
 body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
+
+/* Tabs */
+.tab-bar {
+  display: flex; gap: 0; padding: 0 0 0; flex-shrink: 0;
+}
+.tab-btn {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text2); font-size: 13px; font-weight: 600; font-family: var(--font);
+  padding: 8px 20px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.3px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--today); }
+
+.tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.tab-content.active { display: flex; }
+
+/* Growth Calculator */
+.growth-wrap {
+  flex: 1; display: flex; flex-direction: column; padding: 24px 0 0; overflow: hidden;
+}
+.growth-inputs {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; flex-shrink: 0;
+}
+.growth-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.growth-field label {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.growth-field input {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 14px; padding: 8px 12px; font-family: var(--font);
+  outline: none; width: 150px; transition: border-color 0.15s;
+}
+.growth-field input:focus { border-color: var(--savings); }
+
+.growth-body {
+  display: flex; gap: 24px; flex: 1; min-height: 0;
+}
+.growth-chart-wrap {
+  background: var(--surface); border-radius: 10px; padding: 20px;
+  border: 1px solid var(--border); flex: 1; min-width: 0; position: relative;
+  display: flex; flex-direction: column;
+}
+.growth-chart-wrap canvas { width: 100%; flex: 1; cursor: crosshair; }
+
+.growth-tooltip {
+  position: absolute; pointer-events: none; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: var(--text); white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.12s;
+  z-index: 10;
+}
+.growth-tooltip.visible { opacity: 1; }
+.growth-tooltip .tt-year { font-weight: 600; margin-bottom: 4px; }
+.growth-tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; }
+.growth-tooltip .tt-label { color: var(--text2); }
+.growth-tooltip .tt-val { font-weight: 600; }
+.growth-tooltip .tt-val.contrib { color: var(--savings); }
+.growth-tooltip .tt-val.interest { color: var(--income); }
+.growth-tooltip .tt-val.total { color: var(--text); }
+
+.growth-table-wrap {
+  width: 340px; flex-shrink: 0; overflow-y: auto;
+  background: var(--surface); border-radius: 10px; border: 1px solid var(--border);
+}
+.growth-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.growth-table th {
+  text-align: left; font-size: 10px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  background: var(--surface);
+}
+.growth-table td {
+  padding: 6px 10px; border-bottom: 1px solid #1C1C1E;
+}
+.growth-table tr:hover td { background: rgba(255,255,255,0.02); }
+.growth-table .col-year { color: var(--text); font-weight: 600; }
+.growth-table .col-interest { color: var(--income); }
+.growth-table .col-total { color: var(--text); font-weight: 600; }
+.growth-table .col-principal { color: var(--savings); }
+.growth-table tr.interest-flip td { background: rgba(45,138,78,0.08); }
 </style>
 </head>
 <body>
 
 <div id="app">
-  <div class="cal-header">
-    <h1 id="monthTitle"></h1>
-    <div class="cal-nav">
-      <button class="today-btn" onclick="goToday()">Today</button>
-      <button onclick="navMonth(-1)">&#8249;</button>
-      <button onclick="navMonth(1)">&#8250;</button>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('calendar')">Calendar</button>
+    <button class="tab-btn" onclick="switchTab('growth')">Growth</button>
+  </div>
+
+  <div class="tab-content active" id="tab-calendar">
+    <div class="cal-header">
+      <h1 id="monthTitle"></h1>
+      <div class="cal-nav">
+        <button class="today-btn" onclick="goToday()">Today</button>
+        <button onclick="navMonth(-1)">&#8249;</button>
+        <button onclick="navMonth(1)">&#8250;</button>
+      </div>
+    </div>
+    <div class="dow-row">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div class="cal-grid-wrap">
+      <div class="cal-grid" id="calGrid"></div>
     </div>
   </div>
-  <div class="dow-row">
-    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-  </div>
-  <div class="cal-grid-wrap">
-    <div class="cal-grid" id="calGrid"></div>
+
+  <div class="tab-content" id="tab-growth">
+    <div class="growth-wrap">
+      <div class="growth-inputs">
+        <div class="growth-field">
+          <label>Starting Balance</label>
+          <input type="number" id="g_start" placeholder="10000" oninput="calcGrowth()">
+        </div>
+        <div class="growth-field">
+          <label>Annual Rate (%)</label>
+          <input type="number" id="g_rate" placeholder="7" step="0.1" oninput="calcGrowth()">
+        </div>
+        <div class="growth-field">
+          <label>Monthly Contribution</label>
+          <input type="number" id="g_contrib" placeholder="500" oninput="calcGrowth()">
+        </div>
+        <div class="growth-field">
+          <label>Target Year</label>
+          <input type="number" id="g_target" placeholder="2050" oninput="calcGrowth()">
+        </div>
+      </div>
+      <div class="growth-body">
+        <div class="growth-chart-wrap">
+          <canvas id="growthChart"></canvas>
+          <div class="growth-tooltip" id="growthTooltip"></div>
+        </div>
+        <div class="growth-table-wrap">
+          <table class="growth-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Principal</th>
+                <th>Interest</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="growthBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -995,6 +1130,280 @@ function updateTx(id, field, val) {
 function deleteTx(id) {
   transactions = transactions.filter(t => t.id !== id);
   persist(); render(); renderSettings();
+}
+
+// --- Tabs ---
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && id === 'calendar') || (i === 1 && id === 'growth'));
+  });
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+
+  // Hide gear button on non-calendar tabs
+  document.querySelector('.gear-btn').style.display = id === 'calendar' ? '' : 'none';
+
+  if (id === 'growth') calcGrowthNow();
+}
+
+// --- Growth Calculator ---
+let growthRows = [];
+let growthDebounce = null;
+
+function calcGrowth() {
+  if (growthDebounce) clearTimeout(growthDebounce);
+  growthDebounce = setTimeout(calcGrowthNow, 400);
+}
+
+function calcGrowthNow() {
+  const startBal = parseFloat(document.getElementById('g_start').value) || 0;
+  const annualRate = (parseFloat(document.getElementById('g_rate').value) || 0) / 100;
+  const monthlyContrib = parseFloat(document.getElementById('g_contrib').value) || 0;
+  const targetYear = parseInt(document.getElementById('g_target').value) || (new Date().getFullYear() + 20);
+  const currentYear = new Date().getFullYear();
+  const years = Math.max(1, Math.min(targetYear - currentYear, 100));
+
+  const monthlyRate = annualRate / 12;
+  const rows = [];
+  let balance = startBal;
+  let totalContributions = startBal;
+
+  rows.push({ year: currentYear, contributions: startBal, interest: 0, total: startBal });
+
+  for (let i = 1; i <= years; i++) {
+    for (let m = 0; m < 12; m++) {
+      const interest = balance * monthlyRate;
+      balance += interest + monthlyContrib;
+    }
+    totalContributions += monthlyContrib * 12;
+    rows.push({
+      year: currentYear + i,
+      contributions: totalContributions,
+      interest: balance - totalContributions,
+      total: balance
+    });
+  }
+
+  growthRows = rows;
+
+  // Render table
+  const tbody = document.getElementById('growthBody');
+  tbody.innerHTML = rows.map(r => {
+    const flip = r.interest > r.contributions ? ' class="interest-flip"' : '';
+    return `<tr${flip}>
+      <td class="col-year">${r.year}</td>
+      <td class="col-principal">${fmt(r.contributions)}</td>
+      <td class="col-interest">${fmt(r.interest)}</td>
+      <td class="col-total">${fmt(r.total)}</td>
+    </tr>`;
+  }).join('');
+
+  drawGrowthChart(rows);
+}
+
+function getGrowthChartLayout() {
+  const canvas = document.getElementById('growthChart');
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  const pad = { top: 28, right: 20, bottom: 36, left: 70 };
+  return { canvas, w, h, pad, chartW: w - pad.left - pad.right, chartH: h - pad.top - pad.bottom };
+}
+
+function drawGrowthChart(rows) {
+  const { canvas, w, h, pad, chartW, chartH } = getGrowthChartLayout();
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  if (rows.length < 2) return;
+
+  const maxVal = Math.max(...rows.map(r => r.total));
+  const range = maxVal || 1;
+
+  function x(i) { return pad.left + (i / (rows.length - 1)) * chartW; }
+  function y(v) { return pad.top + chartH - (v / range) * chartH; }
+
+  // Grid lines
+  const gridLines = 5;
+  ctx.strokeStyle = '#2C2C2E';
+  ctx.lineWidth = 1;
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillStyle = '#8E8E93';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= gridLines; i++) {
+    const val = (range / gridLines) * i;
+    const yy = y(val);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, yy);
+    ctx.lineTo(w - pad.right, yy);
+    ctx.stroke();
+    ctx.fillText(fmtShort(val), pad.left - 8, yy + 4);
+  }
+
+  // X labels
+  ctx.textAlign = 'center';
+  const labelStep = Math.max(1, Math.floor(rows.length / 10));
+  for (let i = 0; i < rows.length; i += labelStep) {
+    ctx.fillText(rows[i].year, x(i), h - pad.bottom + 18);
+  }
+  if ((rows.length - 1) % labelStep !== 0) {
+    ctx.fillText(rows[rows.length - 1].year, x(rows.length - 1), h - pad.bottom + 18);
+  }
+
+  // Contributions area
+  ctx.beginPath();
+  ctx.moveTo(x(0), y(0));
+  for (let i = 0; i < rows.length; i++) ctx.lineTo(x(i), y(rows[i].contributions));
+  ctx.lineTo(x(rows.length - 1), y(0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(10,132,255,0.12)';
+  ctx.fill();
+
+  // Interest area (between contributions and total)
+  ctx.beginPath();
+  ctx.moveTo(x(0), y(rows[0].contributions));
+  for (let i = 0; i < rows.length; i++) ctx.lineTo(x(i), y(rows[i].total));
+  for (let i = rows.length - 1; i >= 0; i--) ctx.lineTo(x(i), y(rows[i].contributions));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(45,138,78,0.15)';
+  ctx.fill();
+
+  // Contributions line
+  ctx.beginPath();
+  for (let i = 0; i < rows.length; i++) {
+    i === 0 ? ctx.moveTo(x(i), y(rows[i].contributions)) : ctx.lineTo(x(i), y(rows[i].contributions));
+  }
+  ctx.strokeStyle = '#0A84FF';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Total line
+  ctx.beginPath();
+  for (let i = 0; i < rows.length; i++) {
+    i === 0 ? ctx.moveTo(x(i), y(rows[i].total)) : ctx.lineTo(x(i), y(rows[i].total));
+  }
+  ctx.strokeStyle = '#2D8A4E';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Interest > contributions crossover line
+  let crossIdx = -1;
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].interest > rows[i].contributions && rows[i - 1].interest <= rows[i - 1].contributions) {
+      crossIdx = i;
+      break;
+    }
+  }
+  if (crossIdx > 0) {
+    const cx = x(crossIdx);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(45,138,78,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, pad.top);
+    ctx.lineTo(cx, h - pad.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(45,138,78,0.7)';
+    ctx.textAlign = 'center';
+    ctx.fillText(rows[crossIdx].year, cx, h - pad.bottom + 16);
+    ctx.restore();
+  }
+
+  // Legend
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#0A84FF';
+  ctx.fillRect(pad.left, pad.top - 20, 12, 3);
+  ctx.fillText('Principal', pad.left + 16, pad.top - 16);
+  ctx.fillStyle = '#2D8A4E';
+  ctx.fillRect(pad.left + 86, pad.top - 20, 12, 3);
+  ctx.fillText('Total', pad.left + 102, pad.top - 16);
+}
+
+// Hover tooltip
+(function() {
+  const canvas = document.getElementById('growthChart');
+  const tooltip = document.getElementById('growthTooltip');
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (growthRows.length < 2) return;
+    const { w, h, pad, chartW } = getGrowthChartLayout();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+
+    // Find nearest data point
+    const ratio = (mx - pad.left) / chartW;
+    const idx = Math.round(ratio * (growthRows.length - 1));
+    if (idx < 0 || idx >= growthRows.length) {
+      tooltip.classList.remove('visible');
+      return;
+    }
+
+    const r = growthRows[idx];
+    tooltip.innerHTML = `
+      <div class="tt-year">${r.year}</div>
+      <div class="tt-row"><span class="tt-label">Principal</span><span class="tt-val contrib">${fmt(r.contributions)}</span></div>
+      <div class="tt-row"><span class="tt-label">Interest</span><span class="tt-val interest">${fmt(r.interest)}</span></div>
+      <div class="tt-row"><span class="tt-label">Total</span><span class="tt-val total">${fmt(r.total)}</span></div>
+    `;
+    tooltip.classList.add('visible');
+
+    // Position tooltip
+    const xPos = pad.left + (idx / (growthRows.length - 1)) * chartW;
+    const wrapRect = canvas.parentElement.getBoundingClientRect();
+    let left = xPos + 12;
+    if (left + 180 > wrapRect.width - 20) left = xPos - 180;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = '40px';
+
+    // Draw crosshair on chart
+    drawGrowthChart(growthRows);
+    const ctx2 = canvas.getContext('2d');
+    const dpr2 = window.devicePixelRatio || 1;
+    ctx2.save();
+    ctx2.setTransform(dpr2, 0, 0, dpr2, 0, 0);
+    ctx2.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx2.lineWidth = 1;
+    ctx2.setLineDash([4, 4]);
+    const { h: ch, pad: cpad, chartH: cChartH } = getGrowthChartLayout();
+    ctx2.beginPath();
+    ctx2.moveTo(xPos, cpad.top);
+    ctx2.lineTo(xPos, ch - cpad.bottom);
+    ctx2.stroke();
+    ctx2.setLineDash([]);
+
+    // Dots on the lines
+    const maxVal2 = Math.max(...growthRows.map(rr => rr.total));
+    const range2 = maxVal2 || 1;
+    const yC = cpad.top + cChartH - (r.contributions / range2) * cChartH;
+    const yT = cpad.top + cChartH - (r.total / range2) * cChartH;
+
+    ctx2.fillStyle = '#0A84FF';
+    ctx2.beginPath(); ctx2.arc(xPos, yC, 4, 0, Math.PI * 2); ctx2.fill();
+    ctx2.fillStyle = '#2D8A4E';
+    ctx2.beginPath(); ctx2.arc(xPos, yT, 4, 0, Math.PI * 2); ctx2.fill();
+    ctx2.restore();
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    tooltip.classList.remove('visible');
+    if (growthRows.length >= 2) {
+      drawGrowthChart(growthRows);
+    }
+  });
+})();
+
+function fmtShort(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
+  return '$' + Math.round(n);
 }
 
 // --- Init ---
