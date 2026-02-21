@@ -201,7 +201,7 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
   text-transform: uppercase; letter-spacing: 0.1em; font-weight: 400;
 }
 
-.s-field input[type="number"],
+.s-field input[type="number" inputmode="decimal"],
 .s-field input[type="date"],
 .s-field input[type="text"] {
   background: transparent; border: none; border-bottom: 1px solid var(--border);
@@ -734,7 +734,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .sidebar { width: 100vw; }
   .sidebar-scroll { padding: 16px 16px 32px; }
   .s-field label { font-size: 10px; }
-  .s-field input[type="number"],
+  .s-field input[type="number" inputmode="decimal"],
   .s-field input[type="date"],
   .s-field input[type="text"] { font-size: 12px; width: 110px; }
   .s-field select { font-size: 12px; }
@@ -860,7 +860,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
         <div class="exp-budget-row">
           <div class="exp-budget-field">
             <label>Total</label>
-            <input class="exp-budget-input" type="number" id="expBudgetInput" placeholder="0" onchange="updateExpBudget(this.value)">
+            <input class="exp-budget-input" type="number" inputmode="decimal" id="expBudgetInput" placeholder="0" onchange="updateExpBudget(this.value)">
           </div>
           <div class="exp-budget-cats" id="expBudgetCats"></div>
         </div>
@@ -872,7 +872,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
         </div>
         <div class="exp-form-field">
           <label>Amount</label>
-          <input type="number" id="exp_amount" placeholder="0">
+          <input type="number" inputmode="decimal" id="exp_amount" placeholder="0">
         </div>
         <div class="exp-form-field">
           <label>Category</label>
@@ -901,19 +901,19 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
       <div class="growth-inputs">
         <div class="growth-field">
           <label>Starting Balance</label>
-          <input type="number" id="g_start" placeholder="10000" oninput="calcGrowth()">
+          <input type="number" inputmode="decimal" id="g_start" placeholder="10000" oninput="calcGrowth()">
         </div>
         <div class="growth-field">
           <label>Annual Rate (%)</label>
-          <input type="number" id="g_rate" placeholder="7" step="0.1" oninput="calcGrowth()">
+          <input type="number" inputmode="decimal" id="g_rate" placeholder="7" step="0.1" oninput="calcGrowth()">
         </div>
         <div class="growth-field">
           <label>Monthly Contribution</label>
-          <input type="number" id="g_contrib" placeholder="500" oninput="calcGrowth()">
+          <input type="number" inputmode="decimal" id="g_contrib" placeholder="500" oninput="calcGrowth()">
         </div>
         <div class="growth-field">
           <label>Target Year</label>
-          <input type="number" id="g_target" placeholder="2050" oninput="calcGrowth()">
+          <input type="number" inputmode="decimal" id="g_target" placeholder="2050" oninput="calcGrowth()">
         </div>
       </div>
       <div class="growth-body">
@@ -1518,11 +1518,11 @@ function renderSettings() {
     <h3>Accounts</h3>
     <div class="s-field">
       <label>Checking Balance</label>
-      <input type="number" value="${settings.checkingBalance || ''}" placeholder="0" onchange="updateSetting('checkingBalance', this.value)">
+      <input type="number" inputmode="decimal" value="${settings.checkingBalance || ''}" placeholder="0" onchange="updateSetting('checkingBalance', this.value)">
     </div>
     <div class="s-field">
       <label>Savings Balance</label>
-      <input type="number" value="${settings.savingsBalance || ''}" placeholder="0" onchange="updateSetting('savingsBalance', this.value)">
+      <input type="number" inputmode="decimal" value="${settings.savingsBalance || ''}" placeholder="0" onchange="updateSetting('savingsBalance', this.value)">
     </div>
     <div class="s-field">
       <label>Show Savings</label>
@@ -1548,15 +1548,15 @@ function renderSettings() {
     <h3>Recurring</h3>
     <div class="s-field">
       <label>Rent</label>
-      <input type="number" value="${settings.rent.amount || ''}" placeholder="AMOUNT" onchange="updateRent('amount', this.value)">
+      <input type="number" inputmode="decimal" value="${settings.rent.amount || ''}" placeholder="AMOUNT" onchange="updateRent('amount', this.value)">
     </div>
     <div class="s-field">
       <label>Rent Due Day</label>
-      <input type="number" min="1" max="28" value="${settings.rent.dayOfMonth || ''}" placeholder="1" onchange="updateRent('dayOfMonth', this.value)">
+      <input type="number" inputmode="decimal" min="1" max="28" value="${settings.rent.dayOfMonth || ''}" placeholder="1" onchange="updateRent('dayOfMonth', this.value)">
     </div>
     <div class="s-field">
       <label>Paycheck</label>
-      <input type="number" value="${settings.paycheck.amount || ''}" placeholder="AMOUNT" onchange="updatePaycheck('amount', this.value)">
+      <input type="number" inputmode="decimal" value="${settings.paycheck.amount || ''}" placeholder="AMOUNT" onchange="updatePaycheck('amount', this.value)">
     </div>
     <div class="s-field">
       <label>Last Payday</label>
@@ -1596,7 +1596,7 @@ function renderSettings() {
         </div>
         <div class="s-field">
           <label>Amount</label>
-          <input type="number" value="${stmt.amount}" style="width:100px" onchange="updateStmt('${stmt.id}','amount',this.value)">
+          <input type="number" inputmode="decimal" value="${stmt.amount}" style="width:100px" onchange="updateStmt('${stmt.id}','amount',this.value)">
         </div>
         <div class="s-field">
           <label>Due Date</label>
@@ -1638,7 +1638,7 @@ function renderSettings() {
     </div>
     <div class="s-field">
       <label>Amount</label>
-      <input type="number" id="stmt_amount" placeholder="0" style="width:100px">
+      <input type="number" inputmode="decimal" id="stmt_amount" placeholder="0" style="width:100px">
     </div>
     <div class="s-field">
       <label>Due Date</label>
@@ -1678,12 +1678,12 @@ function renderSettings() {
       if (tx.recurrence === 'monthly') {
         recFields = `<div class="s-field">
           <label>Day of Month</label>
-          <input type="number" min="1" max="28" value="${tx.dayOfMonth}" style="width:70px" onclick="event.stopPropagation()" onchange="updateTx('${tx.id}','dayOfMonth',this.value)">
+          <input type="number" inputmode="decimal" min="1" max="28" value="${tx.dayOfMonth}" style="width:70px" onclick="event.stopPropagation()" onchange="updateTx('${tx.id}','dayOfMonth',this.value)">
         </div>`;
       } else if (tx.recurrence === 'interval') {
         recFields = `<div class="s-field">
           <label>Every __ Days</label>
-          <input type="number" min="1" value="${tx.intervalDays}" style="width:70px" onclick="event.stopPropagation()" onchange="updateTx('${tx.id}','intervalDays',this.value)">
+          <input type="number" inputmode="decimal" min="1" value="${tx.intervalDays}" style="width:70px" onclick="event.stopPropagation()" onchange="updateTx('${tx.id}','intervalDays',this.value)">
         </div>`;
       }
 
@@ -1694,7 +1694,7 @@ function renderSettings() {
         </div>
         <div class="s-field">
           <label>Amount</label>
-          <input type="number" value="${tx.amount}" style="width:100px" onchange="updateTx('${tx.id}','amount',this.value)">
+          <input type="number" inputmode="decimal" value="${tx.amount}" style="width:100px" onchange="updateTx('${tx.id}','amount',this.value)">
         </div>
         <div class="s-field">
           <label>From</label>
@@ -1739,7 +1739,7 @@ function renderSettings() {
     </div>
     <div class="s-field">
       <label>Amount</label>
-      <input type="number" id="tx_amount" placeholder="0" style="width:100px">
+      <input type="number" inputmode="decimal" id="tx_amount" placeholder="0" style="width:100px">
     </div>
     <div class="s-field">
       <label>From</label>
@@ -1786,13 +1786,13 @@ function txRecurrenceChanged() {
   if (rec === 'monthly') {
     container.innerHTML = `<div class="s-field">
       <label>Day of Month</label>
-      <input type="number" id="tx_dayOfMonth" min="1" max="28" placeholder="1" style="width:70px">
+      <input type="number" inputmode="decimal" id="tx_dayOfMonth" min="1" max="28" placeholder="1" style="width:70px">
     </div>`;
     dateLabel.textContent = 'Starting';
   } else if (rec === 'interval') {
     container.innerHTML = `<div class="s-field">
       <label>Every __ Days</label>
-      <input type="number" id="tx_intervalDays" min="1" placeholder="14" style="width:70px">
+      <input type="number" inputmode="decimal" id="tx_intervalDays" min="1" placeholder="14" style="width:70px">
     </div>`;
     dateLabel.textContent = 'Starting';
   } else {
@@ -2036,7 +2036,7 @@ function renderExpEditModal() {
         </div>
         <div class="s-field">
           <label>Amount</label>
-          <input type="number" id="edit_exp_amount" value="${exp.amount}">
+          <input type="number" inputmode="decimal" id="edit_exp_amount" value="${exp.amount}">
         </div>
         <div class="s-field">
           <label>Category</label>
@@ -2070,7 +2070,7 @@ function renderExpenses() {
   document.getElementById('expBudgetCats').innerHTML = cats.map(c =>
     `<div class="exp-budget-cat-field">
       <label>${c}</label>
-      <input type="number" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${c}', this.value)">
+      <input type="number" inputmode="decimal" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${c}', this.value)">
     </div>`
   ).join('');
 
