@@ -8,6 +8,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
 
 :root {
   --bg: #E2DDD6;
@@ -434,6 +437,79 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .growth-table .col-principal { color: var(--accent); }
 .growth-table tr.interest-flip td { background: rgba(74,122,58,0.08); }
 
+/* Log tab — quick-input */
+.log-wrap {
+  flex: 1; display: flex; flex-direction: column; padding: 24px 16px 16px;
+  overflow-y: auto; max-width: 480px;
+}
+.log-heading {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.2em;
+  margin-bottom: 24px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.log-heading::before { content: '// '; }
+.log-field {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px;
+}
+.log-field label {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em;
+}
+.log-field input,
+.log-field select {
+  background: transparent; border: none; border-bottom: 2px solid var(--border);
+  color: var(--text); font-size: 20px; padding: 12px 0; font-family: var(--font);
+  outline: none; transition: border-color 0.15s; width: 100%;
+  -webkit-appearance: none; appearance: none;
+}
+.log-field input:focus,
+.log-field select:focus { border-bottom-color: var(--accent); }
+.log-field input::placeholder { color: var(--text2); font-size: 16px; text-transform: uppercase; letter-spacing: 0.1em; }
+.log-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); width: 24px; height: 24px; }
+.log-field select { cursor: pointer; }
+
+.log-submit {
+  background: none; border: 2px solid var(--accent); color: var(--accent);
+  font-size: 13px; font-weight: 700; padding: 14px 0; cursor: pointer;
+  font-family: var(--font); text-transform: uppercase; letter-spacing: 0.2em;
+  transition: background 0.15s, color 0.15s; width: 100%; margin-top: 8px;
+}
+.log-submit:hover { background: var(--accent); color: #fff; }
+.log-submit:active { background: var(--accent); color: #fff; }
+
+.log-confirm {
+  font-size: 11px; color: #4A7A3A; text-transform: uppercase;
+  letter-spacing: 0.1em; font-weight: 700; margin-top: 16px;
+  opacity: 0; transition: opacity 0.3s;
+  text-align: center;
+}
+.log-confirm.show { opacity: 1; }
+
+.log-recent {
+  margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border);
+}
+.log-recent-heading {
+  font-size: 9px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px;
+}
+.log-recent-heading::before { content: '// '; }
+.log-recent-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(184,178,170,0.3);
+}
+.log-recent-info { flex: 1; min-width: 0; }
+.log-recent-name {
+  font-size: 11px; font-weight: 700; color: var(--text);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.log-recent-meta {
+  font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.log-recent-amount {
+  font-size: 13px; font-weight: 700; color: var(--accent-red); flex-shrink: 0;
+}
+
 /* Expenses tab */
 .expenses-wrap {
   flex: 1; display: flex; flex-direction: column; padding: 20px 0 16px; overflow: hidden;
@@ -541,17 +617,17 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .exp-add-btn:hover { color: var(--text); }
 
 .exp-summary {
-  display: flex; gap: 32px; flex-shrink: 0; margin-bottom: 16px;
+  display: flex; gap: 24px; flex-shrink: 0; margin-bottom: 16px;
 }
 .exp-summary-item {
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; flex-direction: column; gap: 2px; flex: 1;
 }
 .exp-summary-label {
   font-size: 10px; font-weight: 700; color: var(--text2);
   text-transform: uppercase; letter-spacing: 0.15em;
 }
 .exp-summary-value {
-  font-size: 18px; font-weight: 700; color: var(--text);
+  font-size: 22px; font-weight: 700; color: var(--text);
 }
 .exp-summary-value.positive { color: #4A7A3A; }
 .exp-summary-value.negative { color: var(--accent-red); }
@@ -751,6 +827,13 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .growth-table th { font-size: 9px; padding: 6px 6px; }
   .growth-table td { padding: 4px 6px; }
 
+  /* Log tab */
+  .log-wrap { padding: 16px 16px 24px; max-width: none; }
+  .log-field input,
+  .log-field select { font-size: 18px; padding: 10px 0; }
+  .log-field input::placeholder { font-size: 14px; }
+  .log-submit { padding: 16px 0; font-size: 12px; }
+
   /* Expenses tab */
   .expenses-wrap { padding: 8px 10px 8px; }
   .expenses-header { padding: 0 0 6px; }
@@ -760,50 +843,76 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .exp-budget-section { margin-bottom: 10px; padding-bottom: 10px; }
   .exp-budget-label { font-size: 9px; margin-bottom: 4px; }
   .exp-budget-input { font-size: 14px; width: 140px; }
-  .exp-form {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
-    margin-bottom: 10px; padding-bottom: 10px;
-  }
-  .exp-form-field input,
-  .exp-form-field select { width: 100%; font-size: 12px; }
-  .exp-form-field label { font-size: 9px; }
-  .exp-add-btn { grid-column: 1 / -1; text-align: left; font-size: 10px; padding: 4px 0; }
-  .exp-summary { gap: 0; justify-content: space-between; margin-bottom: 10px; }
-  .exp-summary-label { font-size: 9px; }
-  .exp-summary-value { font-size: 14px; }
-  .exp-columns { flex-direction: column; gap: 0; overflow-y: auto; }
-  .exp-cat-tile {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
-    cursor: pointer; transition: background 0.15s;
-  }
-  .exp-cat-tile:active { background: rgba(0,0,0,0.04); }
-  .exp-cat-tile-arrow {
-    font-size: 8px; color: var(--text2); width: 12px; flex-shrink: 0;
-  }
-  .exp-cat-tile-name {
-    font-size: 11px; font-weight: 700; color: var(--text);
-    text-transform: uppercase; letter-spacing: 0.1em; flex: 1;
-  }
-  .exp-cat-tile-count {
-    font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
-  }
-  .exp-cat-tile-rem {
-    font-size: 9px; font-weight: 700; flex-shrink: 0;
-  }
-  .exp-cat-tile-left {
-    font-size: 11px; font-weight: 700; flex-shrink: 0;
-  }
-  .exp-cat-tile-left.positive { color: #4A7A3A; }
-  .exp-cat-tile-left.negative { color: var(--accent-red); }
-  .exp-cat-tile-spent {
-    font-size: 10px; font-weight: 700; color: rgba(196,73,42,0.5); flex-shrink: 0;
-  }
-  .exp-cat-items { padding: 0 0 6px 20px; }
   .exp-budget-row { gap: 12px; }
   .exp-budget-cats { gap: 10px; }
   .exp-budget-cat-field input { width: 60px; font-size: 12px; }
   .exp-budget-cat-field label { font-size: 8px; }
+  .exp-summary { gap: 16px; margin-bottom: 12px; }
+  .exp-summary-label { font-size: 8px; }
+  .exp-summary-value { font-size: 20px; }
+  .exp-columns {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    overflow-y: auto; flex-direction: unset;
+  }
+  .exp-cat-tile {
+    display: flex; flex-direction: column;
+    padding: 10px 12px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 0;
+  }
+  .exp-cat-tile-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 4px;
+    margin-bottom: 6px;
+  }
+  .exp-cat-tile-name {
+    font-size: 9px; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .exp-cat-tile-count {
+    font-size: 9px; color: var(--text2); letter-spacing: 0.05em;
+  }
+  .exp-cat-tile-remaining {
+    font-size: 20px; font-weight: 700; line-height: 1.2;
+  }
+  .exp-cat-tile-remaining.positive { color: #4A7A3A; }
+  .exp-cat-tile-remaining.negative { color: var(--accent-red); }
+  .exp-cat-tile-remaining.zero { color: var(--text2); }
+  .exp-cat-tile-spent {
+    font-size: 9px; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+  .exp-cat-tile-rule {
+    border: none; border-top: 1px solid var(--border);
+    margin: 8px 0 6px;
+  }
+  .exp-cat-tile-preview {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .exp-cat-tile-row {
+    display: flex; align-items: flex-start; gap: 6px;
+    padding: 2px 0;
+  }
+  .exp-cat-tile-row-info {
+    flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 5px;
+    flex-wrap: wrap;
+  }
+  .exp-cat-tile-row-name {
+    color: var(--text); font-weight: 400; font-size: 10px;
+    word-break: break-word; min-width: 0;
+  }
+  .exp-cat-tile-row-date {
+    color: var(--text2); font-size: 9px; flex-shrink: 0;
+  }
+  .exp-cat-tile-row-amt {
+    color: var(--text); font-weight: 700; font-size: 10px; flex-shrink: 0;
+    text-align: right; min-width: 36px;
+  }
+  .exp-cat-tile-more {
+    font-size: 9px; color: var(--text2); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px;
+  }
+  .exp-cat-tile.empty { opacity: 0.45; cursor: default; }
+  .exp-cat-items { padding: 0; }
   .exp-item { padding: 5px 0; }
   .exp-item-name { font-size: 10px; }
   .exp-item-date { font-size: 8px; }
@@ -824,12 +933,44 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 
 <div id="app">
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('calendar')">Calendar</button>
-    <button class="tab-btn" onclick="switchTab('growth')">Growth</button>
+    <button class="tab-btn active" onclick="switchTab('log')">Log</button>
     <button class="tab-btn" onclick="switchTab('expenses')">Expenses</button>
+    <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+    <button class="tab-btn" onclick="switchTab('growth')">Growth</button>
   </div>
 
-  <div class="tab-content active" id="tab-calendar">
+  <div class="tab-content active" id="tab-log">
+    <div class="log-wrap">
+      <div class="log-heading">Quick Log</div>
+      <div class="log-field">
+        <label>Amount</label>
+        <input type="number" inputmode="decimal" id="log_amount" placeholder="0.00" autofocus>
+      </div>
+      <div class="log-field">
+        <label>Name</label>
+        <input type="text" id="log_name" placeholder="E.G. COFFEE">
+      </div>
+      <div class="log-field">
+        <label>Category</label>
+        <select id="log_category">
+          <option value="Groceries">Groceries</option>
+          <option value="Dining">Dining</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Travel">Travel</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="log-field">
+        <label>Date</label>
+        <input type="date" id="log_date">
+      </div>
+      <button class="log-submit" onclick="addExpenseFromLog()">+ Log Expense</button>
+      <div class="log-confirm" id="logConfirm">Added!</div>
+      <div class="log-recent" id="logRecent"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-calendar">
     <div class="cal-header">
       <h1 id="monthTitle"></h1>
       <div class="cal-nav">
@@ -864,31 +1005,6 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
           </div>
           <div class="exp-budget-cats" id="expBudgetCats"></div>
         </div>
-      </div>
-      <div class="exp-form" id="expForm">
-        <div class="exp-form-field">
-          <label>Name</label>
-          <input type="text" id="exp_name" placeholder="E.G. COFFEE">
-        </div>
-        <div class="exp-form-field">
-          <label>Amount</label>
-          <input type="number" inputmode="decimal" id="exp_amount" placeholder="0">
-        </div>
-        <div class="exp-form-field">
-          <label>Category</label>
-          <select id="exp_category">
-            <option value="Groceries">Groceries</option>
-            <option value="Dining">Dining</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Travel">Travel</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="exp-form-field">
-          <label>Date</label>
-          <input type="date" id="exp_date">
-        </div>
-        <button class="exp-add-btn" onclick="addExpense()">+ Add</button>
       </div>
       <div class="exp-summary" id="expSummary"></div>
       <div class="exp-columns" id="expColumns"></div>
@@ -1944,6 +2060,69 @@ let editingExpId = null;
 let expandedExpCats = new Set();
 let catBudgets = load('catBudgets') || { Groceries: 0, Dining: 0, Shopping: 0, Travel: 0, Other: 0 };
 
+// --- Log tab ---
+function initLogDate() {
+  const d = document.getElementById('log_date');
+  if (d && !d.value) d.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
+function addExpenseFromLog() {
+  const amountEl = document.getElementById('log_amount');
+  const nameEl = document.getElementById('log_name');
+  const catEl = document.getElementById('log_category');
+  const dateEl = document.getElementById('log_date');
+  const amount = parseFloat(amountEl.value);
+  const label = nameEl.value.trim();
+  const category = catEl.value;
+  const date = dateEl.value;
+  if (!amount || !label || !date) return;
+
+  expenses.push({
+    id: crypto.randomUUID(),
+    label, amount, category, date,
+    created_at: new Date().toISOString()
+  });
+  persistExpenses();
+
+  // Reset form
+  amountEl.value = '';
+  nameEl.value = '';
+  dateEl.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  // Flash confirmation
+  const conf = document.getElementById('logConfirm');
+  conf.textContent = `${label} — ${fmt(amount)} added`;
+  conf.classList.add('show');
+  setTimeout(() => conf.classList.remove('show'), 2000);
+
+  renderLogRecent();
+}
+
+function renderLogRecent() {
+  initLogDate();
+  const container = document.getElementById('logRecent');
+  if (!container) return;
+  // Show last 5 expenses sorted by created_at desc
+  const recent = [...expenses].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 5);
+  if (!recent.length) {
+    container.innerHTML = '';
+    return;
+  }
+  let html = '<div class="log-recent-heading">Recent</div>';
+  for (const e of recent) {
+    const d = parseDate(e.date);
+    const dateStr = `${MONTH_NAMES[d.getMonth()].substring(0, 3)} ${d.getDate()} · ${e.category}`.toUpperCase();
+    html += `<div class="log-recent-item">
+      <div class="log-recent-info">
+        <div class="log-recent-name">${e.label}</div>
+        <div class="log-recent-meta">${dateStr}</div>
+      </div>
+      <div class="log-recent-amount">${fmt(e.amount)}</div>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
 function persistExpenses() {
   save('expenses', expenses);
   save('expBudget', expBudget);
@@ -1966,29 +2145,6 @@ function navExpMonth(dir) {
 function updateExpBudget(val) {
   expBudget = parseFloat(val) || 0;
   persistExpenses();
-  renderExpenses();
-}
-
-function addExpense() {
-  const label = document.getElementById('exp_name').value.trim();
-  const amount = parseFloat(document.getElementById('exp_amount').value);
-  const category = document.getElementById('exp_category').value;
-  const date = document.getElementById('exp_date').value;
-  if (!label || !amount || !date) return;
-
-  const exp = {
-    id: crypto.randomUUID(),
-    label, amount, category, date,
-    created_at: new Date().toISOString()
-  };
-  expenses.push(exp);
-  persistExpenses();
-
-  // Clear form
-  document.getElementById('exp_name').value = '';
-  document.getElementById('exp_amount').value = '';
-  document.getElementById('exp_date').value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-
   renderExpenses();
 }
 
@@ -2074,12 +2230,6 @@ function renderExpenses() {
     </div>`
   ).join('');
 
-  // Set default date on form
-  const dateInput = document.getElementById('exp_date');
-  if (!dateInput.value) {
-    dateInput.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-  }
-
   // Filter expenses for this month
   const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
 
@@ -2090,16 +2240,12 @@ function renderExpenses() {
 
   document.getElementById('expSummary').innerHTML = `
     <div class="exp-summary-item">
-      <span class="exp-summary-label">Budget</span>
-      <span class="exp-summary-value">${fmt(expBudget)}</span>
+      <span class="exp-summary-label">Remaining</span>
+      <span class="exp-summary-value ${remClass}">${fmt(remaining)}</span>
     </div>
     <div class="exp-summary-item">
       <span class="exp-summary-label">Spent</span>
       <span class="exp-summary-value negative">${fmt(spent)}</span>
-    </div>
-    <div class="exp-summary-item">
-      <span class="exp-summary-label">Remaining</span>
-      <span class="exp-summary-value ${remClass}">${fmt(remaining)}</span>
     </div>`;
 
   // Group by category
@@ -2140,8 +2286,8 @@ function renderExpenses() {
   const mobile = isMobile();
 
   for (const cat of catOrder) {
-    if (!groups[cat]) continue;
-    const items = groups[cat];
+    const items = groups[cat] || [];
+    if (!items.length && !mobile) continue;
     const total = items.reduce((s, e) => s + e.amount, 0);
 
     const catBud = catBudgets[cat] || 0;
@@ -2156,20 +2302,42 @@ function renderExpenses() {
       </div>` : '';
 
     if (mobile) {
-      const isOpen = expandedExpCats.has(cat);
-      const arrow = isOpen ? '&#9660;' : '&#9654;';
-      const tileRem = catBud ? `<span class="exp-cat-tile-left ${remCls}">${fmt(catRem)} LEFT</span>` : '';
-      colsHtml += `
-        <div class="exp-cat-tile${isOpen ? ' open' : ''}" onclick="toggleExpCat('${cat}')">
-          <span class="exp-cat-tile-arrow">${arrow}</span>
-          <span class="exp-cat-tile-name">${cat}</span>
-          <span class="exp-cat-tile-count">${items.length}</span>
-          ${tileRem}
-          <span class="exp-cat-tile-spent">${fmt(total)} SPENT</span>
-        </div>`;
-      if (isOpen) {
-        colsHtml += `<div class="exp-cat-items" onclick="event.stopPropagation()">${buildItemsHtml(items)}</div>`;
+      // Remaining number: show budget remaining if budget set, otherwise just spent
+      let remHtml, spentHtml;
+      if (catBud) {
+        const remValCls = catRem >= 0 ? 'positive' : 'negative';
+        remHtml = `<div class="exp-cat-tile-remaining ${remValCls}">${fmt(catRem)}</div>`;
+        spentHtml = `<div class="exp-cat-tile-spent">SPENT ${fmt(total)} OF ${fmt(catBud)}</div>`;
+      } else {
+        const zeroCls = total ? '' : ' zero';
+        remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? fmt(total) : '$0'}</div>`;
+        spentHtml = total ? `<div class="exp-cat-tile-spent">SPENT</div>` : '';
       }
+      // Top 3 preview items
+      const previewItems = items.slice(0, 3);
+      let previewHtml = '';
+      if (previewItems.length) {
+        previewHtml = '<hr class="exp-cat-tile-rule"><div class="exp-cat-tile-preview">';
+        for (const e of previewItems) {
+          const pd = parseDate(e.date);
+          const pds = `${pd.getMonth()+1}/${pd.getDate()}`;
+          previewHtml += `<div class="exp-cat-tile-row"><div class="exp-cat-tile-row-info"><span class="exp-cat-tile-row-name">${e.label}</span><span class="exp-cat-tile-row-date">${pds}</span></div><span class="exp-cat-tile-row-amt">${fmt(e.amount)}</span></div>`;
+        }
+        if (items.length > 3) {
+          previewHtml += `<div class="exp-cat-tile-more">+ ${items.length - 3} more</div>`;
+        }
+        previewHtml += '</div>';
+      }
+      colsHtml += `
+        <div class="exp-cat-tile${!items.length ? ' empty' : ''}">
+          <div class="exp-cat-tile-top">
+            <span class="exp-cat-tile-name">${cat}</span>
+            ${items.length ? `<span class="exp-cat-tile-count">${items.length}</span>` : ''}
+          </div>
+          ${remHtml}
+          ${spentHtml}
+          ${previewHtml}
+        </div>`;
     } else {
       colsHtml += `
         <div class="exp-column">
@@ -2185,7 +2353,7 @@ function renderExpenses() {
 
 // --- Tabs ---
 function switchTab(id) {
-  const tabs = ['calendar', 'growth', 'expenses'];
+  const tabs = ['log', 'expenses', 'calendar', 'growth'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', tabs[i] === id);
   });
@@ -2196,6 +2364,7 @@ function switchTab(id) {
 
   if (id !== 'calendar' && settingsOpen) toggleSettings();
 
+  if (id === 'log') renderLogRecent();
   if (id === 'growth') calcGrowthNow();
   if (id === 'expenses') renderExpenses();
 }
@@ -2497,7 +2666,8 @@ window.addEventListener('resize', () => {
 // --- Init ---
 autoHideStatements();
 render();
-if (!load('settings')) toggleSettings();
+renderLogRecent();
+document.querySelector('.gear-btn').style.display = 'none';
 </script>
 </body>
 </html>
