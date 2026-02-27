@@ -467,6 +467,9 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .log-field input::placeholder { color: var(--text2); font-size: 16px; text-transform: uppercase; letter-spacing: 0.1em; }
 .log-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); width: 24px; height: 24px; }
 .log-field select { cursor: pointer; }
+.cat-new-input::placeholder {
+  color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;
+}
 
 .log-submit {
   background: none; border: 2px solid var(--accent); color: var(--accent);
@@ -952,13 +955,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
       </div>
       <div class="log-field">
         <label>Category</label>
-        <select id="log_category">
-          <option value="Groceries">Groceries</option>
-          <option value="Dining">Dining</option>
-          <option value="Shopping">Shopping</option>
-          <option value="Travel">Travel</option>
-          <option value="Other">Other</option>
-        </select>
+        <div id="logCatCombo"></div>
       </div>
       <div class="log-field">
         <label>Date</label>
@@ -1081,6 +1078,9 @@ let settings = load('settings') || {
 // Card names for the dropdown
 let cardNames = load('cardNames') || ['Amex', 'Apple', 'Chase'];
 
+// Expense categories (user-editable)
+let categories = load('categories') || ['Groceries', 'Dining', 'Shopping', 'Travel', 'Other'];
+
 // Flat statements list — migrate from old creditCards format
 let statements = load('statements');
 if (!statements) {
@@ -1120,6 +1120,7 @@ if (!transactions) {
 function persist() {
   save('settings', settings);
   save('cardNames', cardNames);
+  save('categories', categories);
   save('statements', statements);
   save('transactions', transactions);
   save('expenses', expenses);
@@ -2060,6 +2061,48 @@ let editingExpId = null;
 let expandedExpCats = new Set();
 let catBudgets = load('catBudgets') || { Groceries: 0, Dining: 0, Shopping: 0, Travel: 0, Other: 0 };
 
+// --- Category combo (select + inline new) ---
+function renderCatCombo(containerId, selected) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const opts = categories.map(c =>
+    `<option value="${c}"${c === selected ? ' selected' : ''}>${c}</option>`
+  ).join('');
+  el.innerHTML = `<select onchange="catComboChange(this,'${containerId}')">
+    ${opts}<option value="__new">+ New Category</option>
+  </select>`;
+}
+
+function catComboChange(sel, containerId) {
+  if (sel.value !== '__new') return;
+  const el = document.getElementById(containerId);
+  el.innerHTML = `<input type="text" class="cat-new-input" placeholder="TYPE NEW CATEGORY" autofocus
+    onkeydown="if(event.key==='Enter')catComboCommit(this,'${containerId}')"
+    onblur="catComboCommit(this,'${containerId}')">`;
+  el.querySelector('input').focus();
+}
+
+function catComboCommit(input, containerId) {
+  const name = input.value.trim();
+  if (name && !categories.includes(name)) {
+    categories.push(name);
+    persist();
+  }
+  renderCatCombo(containerId, name || categories[0]);
+}
+
+function getCatComboValue(containerId) {
+  const el = document.getElementById(containerId);
+  const sel = el.querySelector('select');
+  if (sel) return sel.value === '__new' ? '' : sel.value;
+  const inp = el.querySelector('input');
+  return inp ? inp.value.trim() : '';
+}
+
+function refreshCatList() {
+  renderCatCombo('logCatCombo');
+}
+
 // --- Log tab ---
 function initLogDate() {
   const d = document.getElementById('log_date');
@@ -2069,13 +2112,15 @@ function initLogDate() {
 function addExpenseFromLog() {
   const amountEl = document.getElementById('log_amount');
   const nameEl = document.getElementById('log_name');
-  const catEl = document.getElementById('log_category');
   const dateEl = document.getElementById('log_date');
   const amount = parseFloat(amountEl.value);
   const label = nameEl.value.trim();
-  const category = catEl.value;
+  const catRaw = getCatComboValue('logCatCombo');
   const date = dateEl.value;
-  if (!amount || !label || !date) return;
+  if (!amount || !label || !catRaw || !date) return;
+  // Ensure category is in the list
+  if (!categories.includes(catRaw)) { categories.push(catRaw); persist(); }
+  const category = catRaw;
 
   expenses.push({
     id: crypto.randomUUID(),
@@ -2088,6 +2133,7 @@ function addExpenseFromLog() {
   amountEl.value = '';
   nameEl.value = '';
   dateEl.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  renderCatCombo('logCatCombo', category);
 
   // Flash confirmation
   const conf = document.getElementById('logConfirm');
@@ -2169,7 +2215,11 @@ function saveEditExpense() {
   if (!exp) return;
   exp.label = document.getElementById('edit_exp_name').value.trim() || exp.label;
   exp.amount = parseFloat(document.getElementById('edit_exp_amount').value) || exp.amount;
-  exp.category = document.getElementById('edit_exp_category').value;
+  const newCat = getCatComboValue('editCatCombo');
+  if (newCat) {
+    if (!categories.includes(newCat)) { categories.push(newCat); persist(); }
+    exp.category = newCat;
+  }
   exp.date = document.getElementById('edit_exp_date').value || exp.date;
   persistExpenses();
   closeEditExpense();
@@ -2179,9 +2229,6 @@ function saveEditExpense() {
 function renderExpEditModal() {
   const exp = expenses.find(e => e.id === editingExpId);
   if (!exp) return;
-  const cats = ['Groceries','Dining','Shopping','Travel','Other'];
-  const catOpts = cats.map(c => `<option value="${c}"${c === exp.category ? ' selected' : ''}>${c}</option>`).join('');
-
   document.getElementById('expEditOverlay').innerHTML = `
     <div class="exp-edit-overlay" onclick="if(event.target===this)closeEditExpense()">
       <div class="exp-edit-modal">
@@ -2196,7 +2243,7 @@ function renderExpEditModal() {
         </div>
         <div class="s-field">
           <label>Category</label>
-          <select id="edit_exp_category">${catOpts}</select>
+          <div id="editCatCombo"></div>
         </div>
         <div class="s-field">
           <label>Date</label>
@@ -2208,6 +2255,7 @@ function renderExpEditModal() {
         </div>
       </div>
     </div>`;
+  renderCatCombo('editCatCombo', exp.category);
 }
 
 function toggleExpCat(cat) {
@@ -2222,8 +2270,7 @@ function renderExpenses() {
   document.getElementById('expBudgetInput').value = expBudget || '';
 
   // Render category budget inputs
-  const cats = ['Groceries','Dining','Shopping','Travel','Other'];
-  document.getElementById('expBudgetCats').innerHTML = cats.map(c =>
+  document.getElementById('expBudgetCats').innerHTML = categories.map(c =>
     `<div class="exp-budget-cat-field">
       <label>${c}</label>
       <input type="number" inputmode="decimal" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${c}', this.value)">
@@ -2260,7 +2307,9 @@ function renderExpenses() {
     groups[cat].sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  const catOrder = ['Groceries','Dining','Shopping','Travel','Other'];
+  // Also include any categories from expenses that aren't in the current list
+  const extraCats = [...new Set(monthExps.map(e => e.category))].filter(c => !categories.includes(c));
+  const catOrder = [...categories, ...extraCats];
 
   function buildItemsHtml(items) {
     let html = '';
@@ -2364,7 +2413,7 @@ function switchTab(id) {
 
   if (id !== 'calendar' && settingsOpen) toggleSettings();
 
-  if (id === 'log') renderLogRecent();
+  if (id === 'log') { refreshCatList(); renderLogRecent(); }
   if (id === 'growth') calcGrowthNow();
   if (id === 'expenses') renderExpenses();
 }
@@ -2666,6 +2715,7 @@ window.addEventListener('resize', () => {
 // --- Init ---
 autoHideStatements();
 render();
+refreshCatList();
 renderLogRecent();
 document.querySelector('.gear-btn').style.display = 'none';
 </script>
