@@ -651,6 +651,26 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   padding-bottom: 8px; border-bottom: 1px solid var(--border);
   margin-bottom: 8px;
 }
+.cat-edit-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0; margin: 0;
+}
+.cat-rename-input {
+  flex: 1; min-width: 0;
+  background: transparent; border: none; border-bottom: 2px solid var(--accent);
+  color: var(--text); font-family: var(--font); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 4px 0; outline: none;
+}
+.cat-edit-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent); padding: 4px 6px;
+}
+.cat-edit-btn:hover { color: var(--text); }
+.cat-del-btn { color: var(--accent-red); }
+.cat-del-btn:hover { color: var(--text); }
 .exp-item {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 0; border-bottom: 1px solid rgba(184,178,170,0.3);
@@ -2103,6 +2123,52 @@ function refreshCatList() {
   renderCatCombo('logCatCombo');
 }
 
+// --- Category edit (inline on expense headers) ---
+let editingCatName = null;
+
+function toggleCatEdit(cat) {
+  editingCatName = editingCatName === cat ? null : cat;
+  renderExpenses();
+  if (editingCatName) {
+    const inp = document.getElementById('catRenameInput');
+    if (inp) { inp.focus(); inp.select(); }
+  }
+}
+
+function renameCategory(oldName) {
+  const inp = document.getElementById('catRenameInput');
+  const newName = inp ? inp.value.trim() : '';
+  if (!newName || newName === oldName) { editingCatName = null; renderExpenses(); return; }
+  if (categories.includes(newName)) { editingCatName = null; renderExpenses(); return; }
+  // Update categories list
+  categories = categories.map(c => c === oldName ? newName : c);
+  // Update all expenses
+  for (const e of expenses) { if (e.category === oldName) e.category = newName; }
+  // Update catBudgets
+  if (catBudgets[oldName] !== undefined) {
+    catBudgets[newName] = catBudgets[oldName];
+    delete catBudgets[oldName];
+  }
+  editingCatName = null;
+  persist(); persistExpenses();
+  refreshCatList();
+  renderExpenses();
+}
+
+function deleteCategory(name) {
+  if (categories.length <= 1) return;
+  const used = expenses.filter(e => e.category === name);
+  const fallback = categories.find(c => c !== name);
+  if (used.length && !confirm(`${used.length} expense(s) in "${name}" will move to "${fallback}".`)) return;
+  for (const e of used) e.category = fallback;
+  categories = categories.filter(c => c !== name);
+  delete catBudgets[name];
+  editingCatName = null;
+  persist(); persistExpenses();
+  refreshCatList();
+  renderExpenses();
+}
+
 // --- Log tab ---
 function initLogDate() {
   const d = document.getElementById('log_date');
@@ -2270,12 +2336,23 @@ function renderExpenses() {
   document.getElementById('expBudgetInput').value = expBudget || '';
 
   // Render category budget inputs
-  document.getElementById('expBudgetCats').innerHTML = categories.map(c =>
-    `<div class="exp-budget-cat-field">
-      <label>${c}</label>
-      <input type="number" inputmode="decimal" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${c}', this.value)">
-    </div>`
-  ).join('');
+  document.getElementById('expBudgetCats').innerHTML = categories.map(c => {
+    const esc = c.replace(/'/g, "\\'");
+    if (editingCatName === c) {
+      return `<div class="exp-budget-cat-field">
+        <div class="cat-edit-row" onclick="event.stopPropagation()" style="margin:0;padding:2px 0;border:none">
+          <input type="text" id="catRenameInput" class="cat-rename-input" value="${c}" style="font-size:10px"
+            onkeydown="if(event.key==='Enter')renameCategory('${esc}');if(event.key==='Escape')toggleCatEdit(null)">
+          <button class="cat-edit-btn" onclick="renameCategory('${esc}')">SAVE</button>
+          <button class="cat-edit-btn cat-del-btn" onclick="deleteCategory('${esc}')">DELETE</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="exp-budget-cat-field">
+      <label onclick="toggleCatEdit('${esc}')" style="cursor:pointer">${c}</label>
+      <input type="number" inputmode="decimal" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${esc}', this.value)">
+    </div>`;
+  }).join('');
 
   // Filter expenses for this month
   const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
