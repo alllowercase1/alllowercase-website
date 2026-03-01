@@ -944,6 +944,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .exp-edit-modal { width: 90vw; max-width: 320px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1083,6 +1084,12 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 </div>
 
 <script>
+// --- Supabase client ---
+const SUPABASE_URL = 'https://fjmhqaqnzktbcbkbahnf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbWhxYXFuemt0YmNia2JhaG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIyMDksImV4cCI6MjA4NzIxODIwOX0.US8vAJe9SwdC_LaKedyNqJNcn_bBXPvt39B7KNS9WIU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUserId = null;
+
 // --- Data ---
 function load(key) {
   try { return JSON.parse(localStorage.getItem('fc_' + key)); } catch { return null; }
@@ -1146,6 +1153,87 @@ function persist() {
   save('expenses', expenses);
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
+
+  // Supabase (fire-and-forget — only if logged in)
+  if (!currentUserId) return;
+
+  sb.from('settings').upsert({
+    user_id: currentUserId,
+    checking_balance: settings.checkingBalance,
+    savings_balance: settings.savingsBalance,
+    show_savings: settings.showSavings,
+    rent_amount: settings.rent.amount,
+    rent_day_of_month: settings.rent.dayOfMonth,
+    paycheck_amount: settings.paycheck.amount,
+    paycheck_seed_date: settings.paycheck.seedDate || null,
+    card_names: cardNames,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' }).then();
+
+  sb.from('statements').delete().eq('user_id', currentUserId).then(() => {
+    if (statements.length > 0) {
+      sb.from('statements').insert(statements.map(s => ({
+        id: s.id, user_id: currentUserId, card: s.card,
+        amount: s.amount, due_date: s.dueDate, hidden: s.hidden
+      }))).then();
+    }
+  });
+
+  sb.from('transactions').delete().eq('user_id', currentUserId).then(() => {
+    if (transactions.length > 0) {
+      sb.from('transactions').insert(transactions.map(t => ({
+        id: t.id, user_id: currentUserId, label: t.label,
+        amount: t.amount, source: t.source, target: t.target,
+        date: t.date, recurrence: t.recurrence,
+        day_of_month: t.dayOfMonth, interval_days: t.intervalDays
+      }))).then();
+    }
+  });
+}
+
+// --- Supabase sync ---
+async function loadFromSupabase() {
+  try {
+    const { data: sData } = await sb.from('settings').select('*').eq('user_id', currentUserId).single();
+    if (sData) {
+      settings = {
+        checkingBalance: parseFloat(sData.checking_balance) || 0,
+        savingsBalance: parseFloat(sData.savings_balance) || 0,
+        showSavings: sData.show_savings || false,
+        rent: { amount: parseFloat(sData.rent_amount) || 0, dayOfMonth: sData.rent_day_of_month || 1 },
+        paycheck: { amount: parseFloat(sData.paycheck_amount) || 0, seedDate: sData.paycheck_seed_date || '' }
+      };
+      cardNames = sData.card_names || ['Amex', 'Apple', 'Chase'];
+    }
+
+    const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
+    statements = (stData || []).map(s => ({
+      id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
+    }));
+
+    const { data: txData } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
+    transactions = (txData || []).map(t => ({
+      id: t.id, label: t.label, amount: parseFloat(t.amount),
+      source: t.source, target: t.target, date: t.date,
+      recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
+    }));
+
+    const { data: expData } = await sb.from('expenses').select('*').eq('user_id', currentUserId);
+    expenses = (expData || []).map(e => ({
+      id: e.id, label: e.label, amount: parseFloat(e.amount),
+      category: e.category, date: e.date, created_at: e.created_at
+    }));
+
+    // Re-sync localStorage with remote data
+    save('settings', settings);
+    save('cardNames', cardNames);
+    save('statements', statements);
+    save('transactions', transactions);
+    save('expenses', expenses);
+  } catch (err) {
+    // Supabase unreachable — fall back to localStorage data already in memory
+    console.warn('loadFromSupabase failed, using localStorage:', err);
+  }
 }
 
 // --- Mobile detection ---
@@ -2239,6 +2327,17 @@ function persistExpenses() {
   save('expenses', expenses);
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
+
+  if (!currentUserId) return;
+
+  sb.from('expenses').delete().eq('user_id', currentUserId).then(() => {
+    if (expenses.length > 0) {
+      sb.from('expenses').insert(expenses.map(e => ({
+        id: e.id, user_id: currentUserId, label: e.label,
+        amount: e.amount, category: e.category, date: e.date
+      }))).then();
+    }
+  });
 }
 
 function updateCatBudget(cat, val) {
@@ -2759,21 +2858,49 @@ function fmtShort(n) {
   const lock = document.getElementById('lockScreen');
   const input = document.getElementById('lockInput');
   const error = document.getElementById('lockError');
-  const pw = 'gia';
 
-  if (sessionStorage.getItem('fc_unlocked') === '1') {
+  async function unlock(userId, fromCache) {
+    currentUserId = userId;
+    sessionStorage.setItem('fc_user_id', userId);
+    save('cached_user_id', userId);
+
+    if (!fromCache) {
+      await loadFromSupabase();
+    }
+
+    autoHideStatements();
+    render();
+    refreshCatList();
+    renderLogRecent();
     lock.classList.add('hidden');
+    document.querySelector('.gear-btn').style.display = '';
   }
 
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      if (input.value === pw) {
-        sessionStorage.setItem('fc_unlocked', '1');
-        lock.classList.add('hidden');
+  // Same-session restore
+  const sessionUserId = sessionStorage.getItem('fc_user_id');
+  if (sessionUserId) {
+    unlock(sessionUserId, false);
+    return;
+  }
+
+  input.addEventListener('keydown', async function(e) {
+    if (e.key !== 'Enter') return;
+    try {
+      const { data } = await sb.from('users').select('id').eq('password', input.value).single();
+      if (data) {
+        unlock(data.id, false);
       } else {
         error.textContent = 'INCORRECT';
         input.value = '';
         setTimeout(() => { error.textContent = ''; }, 1500);
+      }
+    } catch {
+      const cachedId = load('cached_user_id');
+      if (cachedId) {
+        unlock(cachedId, true);
+      } else {
+        error.textContent = 'OFFLINE';
+        setTimeout(() => { error.textContent = ''; }, 2000);
       }
     }
   });
@@ -2790,10 +2917,6 @@ window.addEventListener('resize', () => {
 });
 
 // --- Init ---
-autoHideStatements();
-render();
-refreshCatList();
-renderLogRecent();
 document.querySelector('.gear-btn').style.display = 'none';
 </script>
 </body>
