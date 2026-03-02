@@ -1292,6 +1292,9 @@ function persist() {
     paycheck_seed_date: settings.paycheck.seedDate || null,
     card_names: cardNames,
     card_budgets: cardBudgets,
+    categories: categories,
+    cat_budgets: catBudgets,
+    exp_budget: expBudget,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' }).then();
 
@@ -1332,6 +1335,15 @@ async function loadFromSupabase() {
       if (sData.card_budgets && Object.keys(sData.card_budgets).length > 0) {
         cardBudgets = sData.card_budgets;
       }
+      if (sData.categories && sData.categories.length > 0) {
+        categories = sData.categories;
+      }
+      if (sData.cat_budgets && Object.keys(sData.cat_budgets).length > 0) {
+        catBudgets = sData.cat_budgets;
+      }
+      if (sData.exp_budget != null) {
+        expBudget = parseFloat(sData.exp_budget) || 0;
+      }
     }
 
     const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
@@ -1357,6 +1369,9 @@ async function loadFromSupabase() {
     save('settings', settings);
     save('cardNames', cardNames);
     save('cardBudgets', cardBudgets);
+    save('categories', categories);
+    save('catBudgets', catBudgets);
+    save('expBudget', expBudget);
     save('statements', statements);
     save('transactions', transactions);
     save('expenses', expenses);
