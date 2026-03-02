@@ -25,6 +25,9 @@ input[type="number"] { -moz-appearance: textfield; }
   --transfer: #8A8480;
   --font: 'Space Mono', 'Courier New', monospace;
   --sidebar-w: 400px;
+  --card-amex: #3D6B9E;
+  --card-apple: #5B8C5A;
+  --card-chase: #B8860B;
 }
 
 html, body {
@@ -470,6 +473,58 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 .cat-new-input::placeholder {
   color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px;
 }
+.card-toggle-wrap { display: flex; gap: 6px; }
+.card-toggle-btn {
+  flex: 1;
+  padding: 6px 0;
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.card-toggle-btn.active[data-card="Amex"] { background: var(--card-amex); color: #fff; border-color: var(--card-amex); }
+.card-toggle-btn.active[data-card="Apple"] { background: var(--card-apple); color: #fff; border-color: var(--card-apple); }
+.card-toggle-btn.active[data-card="Chase"] { background: var(--card-chase); color: #fff; border-color: var(--card-chase); }
+
+.card-pill {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: 7px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #fff;
+  border-radius: 2px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.card-pill[data-card="Amex"] { background: var(--card-amex); }
+.card-pill[data-card="Apple"] { background: var(--card-apple); }
+.card-pill[data-card="Chase"] { background: var(--card-chase); }
+
+.card-filter-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+.card-filter-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-family: var(--font);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.card-filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.card-filter-btn.active[data-card="Amex"] { background: var(--card-amex); color: #fff; border-color: var(--card-amex); }
+.card-filter-btn.active[data-card="Apple"] { background: var(--card-apple); color: #fff; border-color: var(--card-apple); }
+.card-filter-btn.active[data-card="Chase"] { background: var(--card-chase); color: #fff; border-color: var(--card-chase); }
 
 .log-submit {
   background: none; border: 2px solid var(--accent); color: var(--accent);
@@ -518,7 +573,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   flex: 1; display: flex; flex-direction: column; padding: 20px 0 16px; overflow: hidden;
 }
 .expenses-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; gap: 16px;
   padding: 0 0 16px; flex-shrink: 0;
 }
 .expenses-header h1 {
@@ -979,6 +1034,14 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
         <div id="logCatCombo"></div>
       </div>
       <div class="log-field">
+        <label>Card</label>
+        <div class="card-toggle-wrap" id="logCardToggle">
+          <button type="button" class="card-toggle-btn active" data-card="Amex" onclick="selectCardToggle(this)">AMEX</button>
+          <button type="button" class="card-toggle-btn" data-card="Apple" onclick="selectCardToggle(this)">APPLE</button>
+          <button type="button" class="card-toggle-btn" data-card="Chase" onclick="selectCardToggle(this)">CHASE</button>
+        </div>
+      </div>
+      <div class="log-field">
         <label>Date</label>
         <input type="date" id="log_date">
       </div>
@@ -1014,16 +1077,8 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
           <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>
         </div>
       </div>
-      <div class="exp-budget-section">
-        <div class="exp-budget-label">Monthly Budget</div>
-        <div class="exp-budget-row">
-          <div class="exp-budget-field">
-            <label>Total</label>
-            <input class="exp-budget-input" type="number" inputmode="decimal" id="expBudgetInput" placeholder="0" onchange="updateExpBudget(this.value)">
-          </div>
-          <div class="exp-budget-cats" id="expBudgetCats"></div>
-        </div>
-      </div>
+      <div id="expCardFilter"></div>
+      <div class="exp-budget-section" id="expBudgetSection"></div>
       <div class="exp-summary" id="expSummary"></div>
       <div class="exp-columns" id="expColumns"></div>
     </div>
@@ -1153,6 +1208,7 @@ function persist() {
   save('expenses', expenses);
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
+  save('cardBudgets', cardBudgets);
 
   // Supabase (fire-and-forget — only if logged in)
   if (!currentUserId) return;
@@ -1167,6 +1223,7 @@ function persist() {
     paycheck_amount: settings.paycheck.amount,
     paycheck_seed_date: settings.paycheck.seedDate || null,
     card_names: cardNames,
+    card_budgets: cardBudgets,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' }).then();
 
@@ -1204,6 +1261,9 @@ async function loadFromSupabase() {
         paycheck: { amount: parseFloat(sData.paycheck_amount) || 0, seedDate: sData.paycheck_seed_date || '' }
       };
       cardNames = sData.card_names || ['Amex', 'Apple', 'Chase'];
+      if (sData.card_budgets && Object.keys(sData.card_budgets).length > 0) {
+        cardBudgets = sData.card_budgets;
+      }
     }
 
     const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
@@ -1221,12 +1281,14 @@ async function loadFromSupabase() {
     const { data: expData } = await sb.from('expenses').select('*').eq('user_id', currentUserId);
     expenses = (expData || []).map(e => ({
       id: e.id, label: e.label, amount: parseFloat(e.amount),
-      category: e.category, date: e.date, created_at: e.created_at
+      category: e.category, date: e.date, created_at: e.created_at,
+      card: e.card || 'Amex'
     }));
 
     // Re-sync localStorage with remote data
     save('settings', settings);
     save('cardNames', cardNames);
+    save('cardBudgets', cardBudgets);
     save('statements', statements);
     save('transactions', transactions);
     save('expenses', expenses);
@@ -2167,7 +2229,110 @@ let expViewYear = today.getFullYear();
 let expViewMonth = today.getMonth();
 let editingExpId = null;
 let expandedExpCats = new Set();
+let expCardFilter = 'All';
 let catBudgets = load('catBudgets') || { Groceries: 0, Dining: 0, Shopping: 0, Travel: 0, Other: 0 };
+// Default cycle: 1st of this month to 1st of next month
+function defaultCycleStart() {
+  const y = today.getFullYear(), m = today.getMonth();
+  return dateKey(y, m, 1);
+}
+function defaultCycleEnd() {
+  const y = today.getFullYear(), m = today.getMonth();
+  const d = new Date(y, m + 1, 1);
+  return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+let cardBudgets = load('cardBudgets') || {
+  Amex:  { cycleStart: defaultCycleStart(), cycleEnd: defaultCycleEnd(), dueDate: '', budget: 0 },
+  Apple: { cycleStart: defaultCycleStart(), cycleEnd: defaultCycleEnd(), dueDate: '', budget: 0 },
+  Chase: { cycleStart: defaultCycleStart(), cycleEnd: defaultCycleEnd(), dueDate: '', budget: 0 }
+};
+
+// Migrate old formats to new cycleStart/cycleEnd + per-cycle budgets
+for (const card of Object.keys(cardBudgets)) {
+  const cb = cardBudgets[card];
+  if (cb.closeDay && !cb.cycleStart) {
+    const closeDay = Math.min(parseInt(cb.closeDay) || 1, 28);
+    const y = today.getFullYear(), m = today.getMonth();
+    const thisClose = new Date(y, m, closeDay);
+    const startD = thisClose <= today ? thisClose : new Date(y, m - 1, closeDay);
+    const endD = new Date(startD.getFullYear(), startD.getMonth() + 1, closeDay);
+    cb.cycleStart = dateKey(startD.getFullYear(), startD.getMonth(), startD.getDate());
+    cb.cycleEnd = dateKey(endD.getFullYear(), endD.getMonth(), endD.getDate());
+    delete cb.closeDay;
+    delete cb.dueDay;
+  }
+  // Migrate flat budget/dueDate into per-cycle budgets object
+  if (cb.budget !== undefined || cb.dueDate !== undefined) {
+    if (!cb.budgets) cb.budgets = {};
+    const key = cb.cycleStart || defaultCycleStart();
+    if (!cb.budgets[key]) cb.budgets[key] = { total: 0, dueDate: '', cats: {} };
+    if (cb.budget) { cb.budgets[key].total = cb.budget; delete cb.budget; }
+    if (cb.dueDate) { cb.budgets[key].dueDate = cb.dueDate; delete cb.dueDate; }
+  }
+}
+
+function getCycleRange(card) {
+  const cb = cardBudgets[card] || {};
+  const start = cb.cycleStart || defaultCycleStart();
+  const end = cb.cycleEnd || defaultCycleEnd();
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date(end + 'T00:00:00');
+  return {
+    start, end,
+    label: `${fmtCycleDate(s)} \u2013 ${fmtCycleDate(e)}`
+  };
+}
+
+function navExpCycle(dir) {
+  const card = expCardFilter;
+  const cb = cardBudgets[card];
+  if (!cb) return;
+  const s = new Date(cb.cycleStart + 'T00:00:00');
+  const e = new Date(cb.cycleEnd + 'T00:00:00');
+  const lenMs = e - s;
+  let newStart, newEnd;
+  if (dir > 0) {
+    newStart = e;
+    newEnd = new Date(e.getTime() + lenMs);
+  } else {
+    newEnd = s;
+    newStart = new Date(s.getTime() - lenMs);
+  }
+  cb.cycleStart = dateKey(newStart.getFullYear(), newStart.getMonth(), newStart.getDate());
+  cb.cycleEnd = dateKey(newEnd.getFullYear(), newEnd.getMonth(), newEnd.getDate());
+  persist();
+  renderExpenses();
+}
+
+function fmtCycleDate(d) {
+  return `${MONTH_NAMES[d.getMonth()].substring(0,3).toUpperCase()} ${d.getDate()}`;
+}
+
+function getCycleBudgets(card, cycleStart) {
+  const cb = cardBudgets[card] || {};
+  if (!cb.budgets) cb.budgets = {};
+  return cb.budgets[cycleStart] || { total: 0, dueDate: '', cats: {} };
+}
+
+function updateCycleBudget(card, cycleStart, field, val) {
+  if (!cardBudgets[card]) cardBudgets[card] = {};
+  if (!cardBudgets[card].budgets) cardBudgets[card].budgets = {};
+  if (!cardBudgets[card].budgets[cycleStart]) cardBudgets[card].budgets[cycleStart] = { total: 0, dueDate: '', cats: {} };
+  const entry = cardBudgets[card].budgets[cycleStart];
+  if (field === 'total') entry.total = parseFloat(val) || 0;
+  else if (field === 'dueDate') entry.dueDate = val;
+  else if (field.startsWith('cat:')) entry.cats[field.slice(4)] = parseFloat(val) || 0;
+  persist();
+  renderExpenses();
+}
+
+function updateCardBudget(card, field, val) {
+  if (!cardBudgets[card]) cardBudgets[card] = {};
+  cardBudgets[card][field] = val;
+  persist();
+  renderExpenses();
+}
 
 // --- Category combo (select + inline new) ---
 function renderCatCombo(containerId, selected) {
@@ -2258,6 +2423,15 @@ function deleteCategory(name) {
 }
 
 // --- Log tab ---
+function cardPillHtml(card) {
+  return `<span class="card-pill" data-card="${card}">${card}</span>`;
+}
+
+function selectCardToggle(btn) {
+  btn.closest('.card-toggle-wrap').querySelectorAll('.card-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function initLogDate() {
   const d = document.getElementById('log_date');
   if (d && !d.value) d.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -2276,9 +2450,10 @@ function addExpenseFromLog() {
   if (!categories.includes(catRaw)) { categories.push(catRaw); persist(); }
   const category = catRaw;
 
+  const card = document.querySelector('.card-toggle-btn.active')?.dataset.card || 'Amex';
   expenses.push({
     id: crypto.randomUUID(),
-    label, amount, category, date,
+    label, amount, category, date, card,
     created_at: new Date().toISOString()
   });
   persistExpenses();
@@ -2288,6 +2463,10 @@ function addExpenseFromLog() {
   nameEl.value = '';
   dateEl.value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
   renderCatCombo('logCatCombo', category);
+  // Reset card toggle to Amex default
+  const cardBtns = document.querySelectorAll('#logCardToggle .card-toggle-btn');
+  cardBtns.forEach(b => b.classList.remove('active'));
+  cardBtns[0]?.classList.add('active');
 
   // Flash confirmation
   const conf = document.getElementById('logConfirm');
@@ -2317,7 +2496,7 @@ function renderLogRecent() {
         <div class="log-recent-name">${e.label}</div>
         <div class="log-recent-meta">${dateStr}</div>
       </div>
-      <div class="log-recent-amount">${fmt(e.amount)}</div>
+      <div class="log-recent-amount">${fmt(e.amount)}${cardPillHtml(e.card || 'Amex')}</div>
     </div>`;
   }
   container.innerHTML = html;
@@ -2334,10 +2513,31 @@ function persistExpenses() {
     if (expenses.length > 0) {
       sb.from('expenses').insert(expenses.map(e => ({
         id: e.id, user_id: currentUserId, label: e.label,
-        amount: e.amount, category: e.category, date: e.date
+        amount: e.amount, category: e.category, date: e.date, card: e.card
       }))).then();
     }
   });
+}
+
+let addingNewCat = false;
+function promptAddCategory() {
+  addingNewCat = true;
+  renderExpenses();
+  const inp = document.getElementById('newCatInput');
+  if (inp) inp.focus();
+}
+function commitNewCategory(input) {
+  const name = input.value.trim();
+  addingNewCat = false;
+  if (name && !categories.includes(name)) {
+    categories.push(name);
+    persist();
+  }
+  renderExpenses();
+}
+function cancelNewCategory() {
+  addingNewCat = false;
+  renderExpenses();
 }
 
 function updateCatBudget(cat, val) {
@@ -2386,6 +2586,7 @@ function saveEditExpense() {
     exp.category = newCat;
   }
   exp.date = document.getElementById('edit_exp_date').value || exp.date;
+  exp.card = document.querySelector('#editCardToggle .card-toggle-btn.active')?.dataset.card || exp.card;
   persistExpenses();
   closeEditExpense();
   renderExpenses();
@@ -2414,6 +2615,14 @@ function renderExpEditModal() {
           <label>Date</label>
           <input type="date" id="edit_exp_date" value="${exp.date}">
         </div>
+        <div class="s-field">
+          <label>Card</label>
+          <div class="card-toggle-wrap" id="editCardToggle">
+            <button type="button" class="card-toggle-btn${exp.card === 'Amex' || !exp.card ? ' active' : ''}" data-card="Amex" onclick="selectCardToggle(this)">AMEX</button>
+            <button type="button" class="card-toggle-btn${exp.card === 'Apple' ? ' active' : ''}" data-card="Apple" onclick="selectCardToggle(this)">APPLE</button>
+            <button type="button" class="card-toggle-btn${exp.card === 'Chase' ? ' active' : ''}" data-card="Chase" onclick="selectCardToggle(this)">CHASE</button>
+          </div>
+        </div>
         <div class="exp-edit-actions">
           <button class="exp-edit-cancel" onclick="closeEditExpense()">Cancel</button>
           <button class="exp-edit-save" onclick="saveEditExpense()">Save</button>
@@ -2423,6 +2632,11 @@ function renderExpEditModal() {
   renderCatCombo('editCatCombo', exp.category);
 }
 
+function setExpCardFilter(card) {
+  expCardFilter = card;
+  renderExpenses();
+}
+
 function toggleExpCat(cat) {
   if (expandedExpCats.has(cat)) expandedExpCats.delete(cat);
   else expandedExpCats.add(cat);
@@ -2430,11 +2644,95 @@ function toggleExpCat(cat) {
 }
 
 function renderExpenses() {
-  const monthKey = `${expViewYear}-${String(expViewMonth + 1).padStart(2, '0')}`;
-  document.getElementById('expMonthTitle').textContent = `${MONTH_NAMES[expViewMonth]} ${expViewYear}`;
-  document.getElementById('expBudgetInput').value = expBudget || '';
+  const isCardView = expCardFilter !== 'All';
+  let filteredExps, spent, budget, remaining;
+  let activeCycleStart = null, activeCycleBud = null;
 
-  // Render category budget inputs
+  if (isCardView) {
+    // Card-specific: use billing cycle
+    const { start, end } = getCycleRange(expCardFilter);
+    const cb = cardBudgets[expCardFilter] || {};
+    const cycleBud = getCycleBudgets(expCardFilter, start);
+    activeCycleStart = start;
+    activeCycleBud = cycleBud;
+    document.getElementById('expMonthTitle').textContent = expCardFilter.toUpperCase();
+    const ds = 'background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;padding:2px 0;font-family:var(--font);outline:none';
+    const ls = 'font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em';
+    document.querySelector('.exp-nav').innerHTML = `
+      <button class="arrow-btn" onclick="navExpCycle(-1)">&#8249;</button>
+      <input type="date" style="${ds}" value="${start}"
+        onchange="updateCardBudget('${expCardFilter}','cycleStart',this.value)">
+      <span style="${ls}">\u2013</span>
+      <input type="date" style="${ds}" value="${end}"
+        onchange="updateCardBudget('${expCardFilter}','cycleEnd',this.value)">
+      <button class="arrow-btn" onclick="navExpCycle(1)">&#8250;</button>`;
+    document.querySelector('.exp-nav').style.display = '';
+
+    budget = cycleBud.total || 0;
+
+    filteredExps = expenses.filter(e =>
+      (e.card || 'Amex') === expCardFilter && e.date && e.date >= start && e.date < end
+    );
+    spent = filteredExps.reduce((s, e) => s + e.amount, 0);
+    remaining = budget - spent;
+
+    // Budget section: card cycle view
+    document.getElementById('expBudgetSection').innerHTML = `
+      <div class="exp-budget-label">${expCardFilter.toUpperCase()} Budget <button onclick="promptAddCategory()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;opacity:0.6;padding:0;margin-left:8px">+ Add Category</button></div>
+      <div class="exp-budget-row">
+        <div class="exp-budget-field">
+          <label>Budget</label>
+          <input class="exp-budget-input" type="number" inputmode="decimal"
+            value="${budget || ''}" placeholder="0"
+            onchange="updateCycleBudget('${expCardFilter}','${start}','total',this.value)">
+        </div>
+        <div class="exp-budget-field">
+          <label>Due Date</label>
+          <input type="date" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:14px;padding:4px 0;font-family:var(--font);outline:none"
+            value="${cycleBud.dueDate || ''}"
+            onchange="updateCycleBudget('${expCardFilter}','${start}','dueDate',this.value)">
+        </div>
+      </div>
+      <div class="exp-budget-cats" id="expBudgetCats" style="margin-top:12px"></div>`;
+  } else {
+    // All cards: calendar month view (existing behavior)
+    const monthKey = `${expViewYear}-${String(expViewMonth + 1).padStart(2, '0')}`;
+    document.getElementById('expMonthTitle').textContent = `${MONTH_NAMES[expViewMonth]} ${expViewYear}`;
+    document.querySelector('.exp-nav').innerHTML = `
+      <button class="arrow-btn" onclick="navExpMonth(-1)">&#8249;</button>
+      <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>`;
+    document.querySelector('.exp-nav').style.display = '';
+
+    budget = expBudget;
+    const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
+    filteredExps = monthExps;
+    spent = filteredExps.reduce((s, e) => s + e.amount, 0);
+    remaining = budget - spent;
+
+    // Budget section: monthly view (existing)
+    document.getElementById('expBudgetSection').innerHTML = `
+      <div class="exp-budget-label">Monthly Budget <button onclick="promptAddCategory()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;opacity:0.6;padding:0;margin-left:8px">+ Add Category</button></div>
+      <div class="exp-budget-row">
+        <div class="exp-budget-field">
+          <label>Total</label>
+          <input class="exp-budget-input" type="number" inputmode="decimal" id="expBudgetInput"
+            value="${expBudget || ''}" placeholder="0"
+            onchange="updateExpBudget(this.value)">
+        </div>
+        <div class="exp-budget-cats" id="expBudgetCats"></div>
+      </div>`;
+  }
+
+  // Render card filter bar (unchanged)
+  document.getElementById('expCardFilter').innerHTML = `
+    <div class="card-filter-bar">
+      <button class="card-filter-btn${expCardFilter === 'All' ? ' active' : ''}" onclick="setExpCardFilter('All')">ALL</button>
+      <button class="card-filter-btn${expCardFilter === 'Amex' ? ' active' : ''}" data-card="Amex" onclick="setExpCardFilter('Amex')">AMEX</button>
+      <button class="card-filter-btn${expCardFilter === 'Apple' ? ' active' : ''}" data-card="Apple" onclick="setExpCardFilter('Apple')">APPLE</button>
+      <button class="card-filter-btn${expCardFilter === 'Chase' ? ' active' : ''}" data-card="Chase" onclick="setExpCardFilter('Chase')">CHASE</button>
+    </div>`;
+
+  // Render category budget inputs (scoped to filteredExps regardless of mode)
   document.getElementById('expBudgetCats').innerHTML = categories.map(c => {
     const esc = c.replace(/'/g, "\\'");
     if (editingCatName === c) {
@@ -2449,16 +2747,14 @@ function renderExpenses() {
     }
     return `<div class="exp-budget-cat-field">
       <label onclick="toggleCatEdit('${esc}')" style="cursor:pointer">${c}</label>
-      <input type="number" inputmode="decimal" value="${catBudgets[c] || ''}" placeholder="0" onchange="updateCatBudget('${esc}', this.value)">
+      <input type="number" inputmode="decimal" value="${activeCycleBud ? (activeCycleBud.cats[c] || '') : (catBudgets[c] || '')}" placeholder="0" onchange="${activeCycleStart ? `updateCycleBudget('${expCardFilter}','${activeCycleStart}','cat:${esc}',this.value)` : `updateCatBudget('${esc}', this.value)`}">
     </div>`;
-  }).join('');
+  }).join('') + (addingNewCat ? `<div class="exp-budget-cat-field">
+      <input type="text" id="newCatInput" placeholder="NAME" style="font-size:9px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.1em;background:transparent;border:none;border-bottom:1px solid var(--accent);padding:2px 0;font-family:var(--font);outline:none;width:80px"
+        onkeydown="if(event.key==='Enter')commitNewCategory(this);if(event.key==='Escape')cancelNewCategory()"
+        onblur="commitNewCategory(this)">
+    </div>` : '');
 
-  // Filter expenses for this month
-  const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
-
-  // Summary
-  const spent = monthExps.reduce((s, e) => s + e.amount, 0);
-  const remaining = expBudget - spent;
   const remClass = remaining >= 0 ? 'positive' : 'negative';
 
   document.getElementById('expSummary').innerHTML = `
@@ -2473,7 +2769,7 @@ function renderExpenses() {
 
   // Group by category
   const groups = {};
-  for (const e of monthExps) {
+  for (const e of filteredExps) {
     if (!groups[e.category]) groups[e.category] = [];
     groups[e.category].push(e);
   }
@@ -2484,7 +2780,7 @@ function renderExpenses() {
   }
 
   // Also include any categories from expenses that aren't in the current list
-  const extraCats = [...new Set(monthExps.map(e => e.category))].filter(c => !categories.includes(c));
+  const extraCats = [...new Set(filteredExps.map(e => e.category))].filter(c => !categories.includes(c));
   const catOrder = [...categories, ...extraCats];
 
   function buildItemsHtml(items) {
@@ -2498,7 +2794,7 @@ function renderExpenses() {
             <div class="exp-item-name">${e.label}</div>
             <div class="exp-item-date">${dateStr}</div>
           </div>
-          <div class="exp-item-amount">${fmt(e.amount)}</div>
+          <div class="exp-item-amount">${fmt(e.amount)}${cardPillHtml(e.card || 'Amex')}</div>
           <div class="exp-item-actions">
             <button class="exp-item-btn" onclick="event.stopPropagation();deleteExpense('${e.id}')" title="Delete">&times;</button>
           </div>
@@ -2515,7 +2811,7 @@ function renderExpenses() {
     if (!items.length && !mobile) continue;
     const total = items.reduce((s, e) => s + e.amount, 0);
 
-    const catBud = catBudgets[cat] || 0;
+    const catBud = activeCycleBud ? (activeCycleBud.cats[cat] || 0) : (catBudgets[cat] || 0);
     const catRem = catBud - total;
     const remCls = catRem >= 0 ? 'positive' : 'negative';
 
@@ -2538,23 +2834,24 @@ function renderExpenses() {
         remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? fmt(total) : '$0'}</div>`;
         spentHtml = total ? `<div class="exp-cat-tile-spent">SPENT</div>` : '';
       }
-      // Top 3 preview items
-      const previewItems = items.slice(0, 3);
+      // Preview items (top 3 collapsed, all when expanded)
+      const expanded = expandedExpCats.has(cat);
+      const visibleItems = expanded ? items : items.slice(0, 3);
       let previewHtml = '';
-      if (previewItems.length) {
+      if (visibleItems.length) {
         previewHtml = '<hr class="exp-cat-tile-rule"><div class="exp-cat-tile-preview">';
-        for (const e of previewItems) {
+        for (const e of visibleItems) {
           const pd = parseDate(e.date);
           const pds = `${pd.getMonth()+1}/${pd.getDate()}`;
-          previewHtml += `<div class="exp-cat-tile-row"><div class="exp-cat-tile-row-info"><span class="exp-cat-tile-row-name">${e.label}</span><span class="exp-cat-tile-row-date">${pds}</span></div><span class="exp-cat-tile-row-amt">${fmt(e.amount)}</span></div>`;
+          previewHtml += `<div class="exp-cat-tile-row" onclick="event.stopPropagation();openEditExpense('${e.id}')" style="cursor:pointer"><div class="exp-cat-tile-row-info"><span class="exp-cat-tile-row-name">${e.label}</span><span class="exp-cat-tile-row-date">${pds}</span></div><span class="exp-cat-tile-row-amt">${fmt(e.amount)}${cardPillHtml(e.card || 'Amex')}</span></div>`;
         }
-        if (items.length > 3) {
+        if (!expanded && items.length > 3) {
           previewHtml += `<div class="exp-cat-tile-more">+ ${items.length - 3} more</div>`;
         }
         previewHtml += '</div>';
       }
       colsHtml += `
-        <div class="exp-cat-tile${!items.length ? ' empty' : ''}">
+        <div class="exp-cat-tile${!items.length ? ' empty' : ''}${expanded ? ' expanded' : ''}" onclick="toggleExpCat('${cat.replace(/'/g, "\\'")}');" style="cursor:pointer">
           <div class="exp-cat-tile-top">
             <span class="exp-cat-tile-name">${cat}</span>
             ${items.length ? `<span class="exp-cat-tile-count">${items.length}</span>` : ''}
