@@ -370,11 +370,18 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
 body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 body.exp-settings-open #app { margin-right: var(--sidebar-w); }
 body.exp-settings-open .exp-settings-btn { opacity: 0; pointer-events: none; }
+.exp-add-cat-btn {
+  background: none; border: none; color: var(--text2); font-size: 10px;
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
+  transition: color 0.15s; margin-left: auto; margin-right: 12px;
+}
+.exp-add-cat-btn:hover { color: var(--text); }
 .exp-today-btn {
   background: none; border: none; color: var(--accent-red); font-size: 10px;
   cursor: pointer; font-family: var(--font); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
-  transition: color 0.15s; margin-left: auto;
+  transition: color 0.15s;
 }
 .exp-today-btn:hover { color: var(--text); }
 .exp-settings-btn {
@@ -733,9 +740,10 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
 
 .exp-columns {
   display: flex; gap: 24px; flex: 1; min-height: 0; align-items: stretch;
+  overflow-x: auto;
 }
 .exp-column {
-  flex: 1; min-width: 160px; max-width: 280px;
+  flex: 0 0 auto; min-width: 160px; max-width: 280px; width: 200px;
   display: flex; flex-direction: column;
 }
 .exp-column + .exp-column {
@@ -1123,6 +1131,7 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
           <button class="arrow-btn" onclick="navExpMonth(-1)">&#8249;</button>
           <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>
         </div>
+        <button class="exp-add-cat-btn" onclick="promptAddCategory()">+ Category</button>
         <button class="exp-today-btn" onclick="goExpToday()">Today</button>
         <button class="exp-settings-btn" onclick="toggleExpSettings()">Settings</button>
       </div>
@@ -2685,10 +2694,39 @@ function persistExpenses() {
 
 let addingNewCat = false;
 function promptAddCategory() {
-  addingNewCat = true;
+  const cols = document.getElementById('expColumns');
+  if (!cols) return;
+  // Remove any existing new-cat input column
+  const existing = document.getElementById('newCatCol');
+  if (existing) { existing.remove(); return; }
+  const col = document.createElement('div');
+  col.className = 'exp-column';
+  col.id = 'newCatCol';
+  col.innerHTML = `<div class="exp-col-header"><input type="text" id="newCatColInput" placeholder="CATEGORY NAME" style="background:transparent;border:none;border-bottom:1px solid var(--accent);color:var(--text);font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;outline:none;width:100%;text-align:center;padding:2px 0" onkeydown="if(event.key==='Enter')commitNewCatCol();if(event.key==='Escape'){this.closest('.exp-column').remove()}" onblur="setTimeout(commitNewCatCol,150)"></div><div class="exp-col-items"></div>`;
+  cols.appendChild(col);
+  col.querySelector('#newCatColInput').focus();
+}
+function commitNewCatCol() {
+  const inp = document.getElementById('newCatColInput');
+  if (!inp) return;
+  const name = inp.value.trim();
+  const col = document.getElementById('newCatCol');
+  if (col) col.remove();
+  if (name && !categories.includes(name)) {
+    categories.push(name);
+    persist();
+    renderExpenses();
+    if (expSettingsOpen) renderExpSettings();
+  }
+}
+function deleteCategory(cat) {
+  const idx = categories.indexOf(cat);
+  if (idx === -1) return;
+  categories.splice(idx, 1);
+  delete catBudgets[cat];
+  persist();
+  renderExpenses();
   if (expSettingsOpen) renderExpSettings();
-  const inp = document.getElementById('newCatInput');
-  if (inp) inp.focus();
 }
 function commitNewCategory(input) {
   const name = input.value.trim();
@@ -3017,7 +3055,7 @@ function renderExpenses() {
         const remValCls = over ? 'negative' : 'positive';
         const remLabel = over ? `${fmt(Math.abs(catRem))} Over` : `${fmt(catRem)} Remaining`;
         remHtml = `<div class="exp-cat-tile-remaining ${remValCls}">${remLabel}</div>`;
-        spentHtml = `<div class="exp-cat-tile-spent">${fmt(total)} Spent &middot; ${fmt(catBud)} Budget</div>`;
+        spentHtml = `<div class="exp-cat-tile-spent">${fmt(total)} Spent <span style="color:var(--text)">&middot; ${fmt(catBud)} Budget</span></div>`;
       } else {
         const zeroCls = total ? '' : ' zero';
         remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? `${fmt(total)} Spent` : '$0'}</div>`;
@@ -3052,7 +3090,7 @@ function renderExpenses() {
     } else {
       colsHtml += `
         <div class="exp-column">
-          <div class="exp-col-header"><div>${cat}</div><div style="margin-top:2px">${catBud ? `<span style="font-weight:700;color:${catRem >= 0 ? '#4A7A3A' : 'var(--accent-red)'}">${catRem < 0 ? fmt(Math.abs(catRem))+' OVER' : fmt(catRem)+' LEFT'}</span> <span style="font-weight:700;color:rgba(196,73,42,0.5);font-size:9px;margin-left:8px">${fmt(total)} SPENT &middot; ${fmt(catBud)} BUDGET</span>` : `<span style="font-weight:700;color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</span>`}</div></div>
+          <div class="exp-col-header" style="position:relative"><button onclick="event.stopPropagation();deleteCategory('${cat.replace(/'/g, "\\'")}')" style="position:absolute;top:0;right:0;background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;opacity:0.4;padding:0 2px;font-family:var(--font);line-height:1" title="Remove category">&times;</button><div>${cat}</div>${catBud ? `<div style="margin-top:3px;font-weight:700;color:${catRem >= 0 ? '#4A7A3A' : 'var(--accent-red)'}">${catRem < 0 ? fmt(Math.abs(catRem))+' OVER' : fmt(catRem)+' LEFT'}</div><div style="margin-top:1px;font-weight:700;font-size:9px"><span style="color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</span> <span style="color:var(--text)">&middot; ${fmt(catBud)} BUDGET</span></div>` : `<div style="margin-top:3px;font-weight:700;color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</div>`}</div>
           <div class="exp-col-items">${buildItemsHtml(items)}</div>
         </div>`;
     }
@@ -3060,6 +3098,11 @@ function renderExpenses() {
 
   const empty = '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;padding:20px 0;">No expenses this month</div>';
   document.getElementById('expColumns').innerHTML = colsHtml || empty;
+  // Equalize column header heights
+  const headers = document.querySelectorAll('.exp-col-header');
+  let maxH = 0;
+  headers.forEach(h => { h.style.minHeight = ''; maxH = Math.max(maxH, h.offsetHeight); });
+  if (maxH) headers.forEach(h => h.style.minHeight = maxH + 'px');
 }
 
 // --- Tabs ---
