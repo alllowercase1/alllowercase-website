@@ -371,24 +371,24 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 body.exp-settings-open #app { margin-right: var(--sidebar-w); }
 body.exp-settings-open .exp-settings-btn { opacity: 0; pointer-events: none; }
 .exp-add-cat-btn {
-  background: none; border: none; color: var(--text2); font-size: 10px;
+  background: none; border: none; color: var(--text2); font-size: 9px;
   cursor: pointer; font-family: var(--font); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
-  transition: color 0.15s; margin-left: auto; margin-right: 12px;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0;
+  transition: color 0.15s; margin-left: auto; white-space: nowrap;
 }
 .exp-add-cat-btn:hover { color: var(--text); }
 .exp-today-btn {
-  background: none; border: none; color: var(--accent-red); font-size: 10px;
+  background: none; border: none; color: var(--accent-red); font-size: 9px;
   cursor: pointer; font-family: var(--font); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
-  transition: color 0.15s;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0;
+  transition: color 0.15s; white-space: nowrap;
 }
 .exp-today-btn:hover { color: var(--text); }
 .exp-settings-btn {
-  background: none; border: none; color: var(--text2); font-size: 10px;
+  background: none; border: none; color: var(--text2); font-size: 9px;
   cursor: pointer; font-family: var(--font); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
-  transition: color 0.15s;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0;
+  transition: color 0.15s; white-space: nowrap;
 }
 .exp-settings-btn:hover { color: var(--text); }
 
@@ -596,11 +596,12 @@ body.exp-settings-open .exp-settings-btn { opacity: 0; pointer-events: none; }
   flex: 1; display: flex; flex-direction: column; padding: 20px 0 16px; overflow: hidden;
 }
 .expenses-header {
-  display: flex; align-items: center; gap: 16px;
-  padding: 0 0 16px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 0 16px; flex-shrink: 0; flex-wrap: nowrap;
 }
 .expenses-header h1 {
-  font-size: 28px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  font-size: 18px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  white-space: nowrap; margin: 0;
 }
 .exp-nav { display: flex; gap: 12px; align-items: center; }
 .exp-nav button {
@@ -968,11 +969,11 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
   /* Expenses tab */
   .expenses-wrap { padding: 8px 10px 8px; }
   .expenses-header { padding: 0 0 6px; }
-  .expenses-header h1 { font-size: 15px; letter-spacing: 0.1em; }
+  .expenses-header h1 { font-size: 14px; letter-spacing: 0.1em; }
   .exp-nav button { font-size: 10px; }
   .exp-nav .arrow-btn { font-size: 16px; }
   .exp-budget-section { margin-bottom: 10px; padding-bottom: 10px; }
-  .exp-header-text { font-size: 12px; line-height: 1.7; }
+  .exp-header-text { font-size: 11px; line-height: 1.7; }
   .exp-card-due-line { font-size: 12px; }
   .exp-budget-label { font-size: 9px; margin-bottom: 4px; }
   .exp-budget-input { font-size: 14px; width: 140px; }
@@ -1004,7 +1005,7 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
     font-size: 9px; color: var(--text2); letter-spacing: 0.05em;
   }
   .exp-cat-tile-remaining {
-    font-size: 20px; font-weight: 700; line-height: 1.2;
+    font-size: 14px; font-weight: 700; line-height: 1.2; white-space: nowrap;
   }
   .exp-cat-tile-remaining.positive { color: #4A7A3A; }
   .exp-cat-tile-remaining.negative { color: var(--accent-red); }
@@ -3058,7 +3059,7 @@ function renderExpenses() {
         spentHtml = `<div class="exp-cat-tile-spent">${fmt(total)} Spent <span style="color:var(--text)">&middot; ${fmt(catBud)} Budget</span></div>`;
       } else {
         const zeroCls = total ? '' : ' zero';
-        remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? `${fmt(total)} Spent` : '$0'}</div>`;
+        remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:rgba(196,73,42,0.5)">${total ? `${fmt(total)} Spent` : '$0'}</div>`;
         spentHtml = '';
       }
       // Preview items (top 3 collapsed, all when expanded)
