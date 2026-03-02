@@ -207,7 +207,7 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
   text-transform: uppercase; letter-spacing: 0.1em; font-weight: 400;
 }
 
-.s-field input[type="number" inputmode="decimal"],
+.s-field input[type="number"],
 .s-field input[type="date"],
 .s-field input[type="text"] {
   background: transparent; border: none; border-bottom: 1px solid var(--border);
@@ -368,6 +368,22 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
 }
 .gear-btn:hover { color: var(--text); }
 body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
+body.exp-settings-open #app { margin-right: var(--sidebar-w); }
+body.exp-settings-open .exp-settings-btn { opacity: 0; pointer-events: none; }
+.exp-today-btn {
+  background: none; border: none; color: var(--accent-red); font-size: 10px;
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
+  transition: color 0.15s; margin-left: auto;
+}
+.exp-today-btn:hover { color: var(--text); }
+.exp-settings-btn {
+  background: none; border: none; color: var(--text2); font-size: 10px;
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 0;
+  transition: color 0.15s;
+}
+.exp-settings-btn:hover { color: var(--text); }
 
 /* Growth Calculator */
 .growth-wrap {
@@ -632,6 +648,31 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 }
 .exp-budget-cat-field input:focus { border-bottom-color: var(--accent); }
 
+/* Conversational header */
+.exp-header-text {
+  font-size: 13px; line-height: 1.8; color: var(--text);
+  padding: 0 0 4px; letter-spacing: 0.02em;
+}
+.exp-header-text .over { color: var(--accent-red); }
+.exp-header-text .remaining { color: var(--accent); }
+.date-wrap { display: inline; }
+.date-label {
+  cursor: pointer; border-bottom: 1px dashed var(--border);
+  font-weight: 700; transition: border-color 0.15s;
+}
+.date-label:hover { border-bottom-color: var(--text); }
+input.date-inline {
+  font-family: var(--font); font-size: inherit; font-weight: 700;
+  color: var(--text); background: none;
+  border: none; border-bottom: 1px dashed var(--border);
+  padding: 0; margin: 0; width: 10em;
+}
+input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
+.exp-card-due-line {
+  font-size: 13px; line-height: 1.8; letter-spacing: 0.02em;
+}
+.exp-card-due-line .card-name { font-weight: 700; }
+
 .exp-col-budget {
   display: flex; justify-content: space-between; gap: 8px;
   font-size: 10px; padding: 4px 0 8px; letter-spacing: 0.05em; text-transform: uppercase;
@@ -697,6 +738,9 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   flex: 1; min-width: 160px; max-width: 280px;
   display: flex; flex-direction: column;
 }
+.exp-column + .exp-column {
+  border-left: 1px solid var(--border); padding-left: 24px;
+}
 .exp-col-items {
   flex: 1; overflow-y: auto; min-height: 0;
 }
@@ -704,7 +748,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   font-size: 10px; font-weight: 700; color: var(--text2);
   text-transform: uppercase; letter-spacing: 0.15em;
   padding-bottom: 8px; border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
+  margin-bottom: 8px; text-align: center;
 }
 .cat-edit-row {
   display: flex; align-items: center; gap: 6px;
@@ -809,6 +853,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
 
   #app { padding: 8px 0 0; height: 100vh; display: flex; flex-direction: column; }
   body.settings-open #app { margin-right: 0; }
+  body.exp-settings-open #app { margin-right: 0; }
 
   /* Tabs */
   .tab-bar { padding: 0 0 6px; margin: 0 8px; }
@@ -888,7 +933,7 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .sidebar { width: 100vw; }
   .sidebar-scroll { padding: 16px 16px 32px; }
   .s-field label { font-size: 10px; }
-  .s-field input[type="number" inputmode="decimal"],
+  .s-field input[type="number"],
   .s-field input[type="date"],
   .s-field input[type="text"] { font-size: 12px; width: 110px; }
   .s-field select { font-size: 12px; }
@@ -919,6 +964,8 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
   .exp-nav button { font-size: 10px; }
   .exp-nav .arrow-btn { font-size: 16px; }
   .exp-budget-section { margin-bottom: 10px; padding-bottom: 10px; }
+  .exp-header-text { font-size: 12px; line-height: 1.7; }
+  .exp-card-due-line { font-size: 12px; }
   .exp-budget-label { font-size: 9px; margin-bottom: 4px; }
   .exp-budget-input { font-size: 14px; width: 140px; }
   .exp-budget-row { gap: 12px; }
@@ -1076,6 +1123,8 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
           <button class="arrow-btn" onclick="navExpMonth(-1)">&#8249;</button>
           <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>
         </div>
+        <button class="exp-today-btn" onclick="goExpToday()">Today</button>
+        <button class="exp-settings-btn" onclick="toggleExpSettings()">Settings</button>
       </div>
       <div id="expCardFilter"></div>
       <div class="exp-budget-section" id="expBudgetSection"></div>
@@ -1136,6 +1185,15 @@ body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
     <button class="sidebar-close" onclick="toggleSettings()">&times;</button>
   </div>
   <div class="sidebar-scroll" id="sidebarContent"></div>
+</div>
+
+
+<div class="sidebar" id="expSidebar">
+  <div class="sidebar-header">
+    <h2>// Expense Settings</h2>
+    <button class="sidebar-close" onclick="toggleExpSettings()">&times;</button>
+  </div>
+  <div class="sidebar-scroll" id="expSidebarContent"></div>
 </div>
 
 <script>
@@ -1772,6 +1830,7 @@ function goToday() {
 
 // --- Settings ---
 let settingsOpen = false;
+let expSettingsOpen = false;
 let expandedTxId = null;
 let expandedStmtId = null;
 let showHiddenStmts = false;
@@ -1793,6 +1852,85 @@ function toggleSettings() {
   document.body.classList.toggle('settings-open', settingsOpen);
   document.getElementById('sidebar').classList.toggle('open', settingsOpen);
   if (settingsOpen) renderSettings();
+}
+
+function toggleExpSettings() {
+  expSettingsOpen = !expSettingsOpen;
+  document.body.classList.toggle('exp-settings-open', expSettingsOpen);
+  document.getElementById('expSidebar').classList.toggle('open', expSettingsOpen);
+  if (expSettingsOpen) renderExpSettings();
+}
+
+function renderExpSettings() {
+  let html = '';
+
+  // Combined total at top
+  let budgetTotal = 0;
+  for (const card of cardNames) {
+    const { start } = getCycleRange(card);
+    const cycleBud = getCycleBudgets(card, start);
+    budgetTotal += (cycleBud.total || 0);
+  }
+  html += `<div class="s-section">
+    <h3>Budgets</h3>
+    <div class="s-field">
+      <label>Total</label>
+      <span style="font-size:14px;font-weight:700;padding:4px 0">${fmt(budgetTotal)}</span>
+    </div>`;
+  for (const card of cardNames) {
+    const { start } = getCycleRange(card);
+    const cycleBud = getCycleBudgets(card, start);
+    html += `<div class="s-field">
+      <label>${card}</label>
+      <input type="number" inputmode="decimal" value="${cycleBud.total || ''}" placeholder="0"
+        onchange="updateCycleBudget('${card}','${start}','total',parseFloat(this.value)||0)">
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Per-card category sections
+  for (const card of cardNames) {
+    const { start } = getCycleRange(card);
+    const cycleBud = getCycleBudgets(card, start);
+    html += `<div class="s-section">
+      <h3>${card} Categories</h3>
+      <div class="exp-budget-cats" id="expSettingsCats_${card}"></div>
+      <button onclick="promptAddCategory()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;opacity:0.6;padding:8px 0;margin-top:4px">+ Add Category</button>
+    </div>`;
+  }
+
+  document.getElementById('expSidebarContent').innerHTML = html;
+
+  // Render category inputs per card
+  for (const card of cardNames) {
+    const { start } = getCycleRange(card);
+    const cycleBud = getCycleBudgets(card, start);
+    const catContainer = document.getElementById('expSettingsCats_' + card);
+    if (!catContainer) continue;
+
+    catContainer.innerHTML = categories.map(c => {
+      const esc = c.replace(/'/g, "\\'");
+      if (editingCatName === c) {
+        return `<div class="exp-budget-cat-field">
+          <div class="cat-edit-row" onclick="event.stopPropagation()" style="margin:0;padding:2px 0;border:none">
+            <input type="text" id="catRenameInput" class="cat-rename-input" value="${c}" style="font-size:10px"
+              onkeydown="if(event.key==='Enter')renameCategory('${esc}');if(event.key==='Escape')toggleCatEdit(null)">
+            <button class="cat-edit-btn" onclick="renameCategory('${esc}')">SAVE</button>
+            <button class="cat-edit-btn cat-del-btn" onclick="deleteCategory('${esc}')">DELETE</button>
+          </div>
+        </div>`;
+      }
+      return `<div class="exp-budget-cat-field">
+        <label onclick="toggleCatEdit('${esc}')" style="cursor:pointer">${c}</label>
+        <input type="number" inputmode="decimal" value="${cycleBud.cats[c] || ''}" placeholder="0"
+          onchange="updateCycleBudget('${card}','${start}','cat:${esc}',this.value)">
+      </div>`;
+    }).join('') + (addingNewCat ? `<div class="exp-budget-cat-field">
+        <input type="text" id="newCatInput" placeholder="NAME" style="font-size:9px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.1em;background:transparent;border:none;border-bottom:1px solid var(--accent);padding:2px 0;font-family:var(--font);outline:none;width:80px"
+          onkeydown="if(event.key==='Enter')commitNewCategory(this);if(event.key==='Escape')cancelNewCategory()"
+          onblur="commitNewCategory(this)">
+      </div>` : '');
+  }
 }
 
 function renderSettings() {
@@ -2274,8 +2412,11 @@ for (const card of Object.keys(cardBudgets)) {
 
 function getCycleRange(card) {
   const cb = cardBudgets[card] || {};
-  const start = cb.cycleStart || defaultCycleStart();
-  const end = cb.cycleEnd || defaultCycleEnd();
+  let start = cb.cycleStart || defaultCycleStart();
+  let end = cb.cycleEnd || defaultCycleEnd();
+  // Validate — reset to defaults if dates are invalid
+  if (isNaN(new Date(start + 'T00:00:00').getTime())) start = defaultCycleStart();
+  if (isNaN(new Date(end + 'T00:00:00').getTime())) end = defaultCycleEnd();
   const s = new Date(start + 'T00:00:00');
   const e = new Date(end + 'T00:00:00');
   return {
@@ -2288,9 +2429,11 @@ function navExpCycle(dir) {
   const card = expCardFilter;
   const cb = cardBudgets[card];
   if (!cb) return;
-  const s = new Date(cb.cycleStart + 'T00:00:00');
-  const e = new Date(cb.cycleEnd + 'T00:00:00');
+  const { start, end } = getCycleRange(card);
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date(end + 'T00:00:00');
   const lenMs = e - s;
+  if (!lenMs || isNaN(lenMs)) return;
   let newStart, newEnd;
   if (dir > 0) {
     newStart = e;
@@ -2306,7 +2449,24 @@ function navExpCycle(dir) {
 }
 
 function fmtCycleDate(d) {
+  if (!d || isNaN(d.getTime())) return '—';
   return `${MONTH_NAMES[d.getMonth()].substring(0,3).toUpperCase()} ${d.getDate()}`;
+}
+
+function formatOrdinal(dateStr) {
+  if (!dateStr) return '';
+  const d = parseDate(dateStr);
+  const day = d.getDate();
+  const s = [,'st','nd','rd'][day % 10 > 3 ? 0 : (day % 100 - day % 10 !== 10) * (day % 10)] || 'th';
+  return MONTH_NAMES[d.getMonth()] + ' ' + day + s;
+}
+
+function dateSpan(dateStr, onChangeExpr, placeholder) {
+  const display = dateStr ? formatOrdinal(dateStr) : (placeholder || 'Set date');
+  const val = dateStr || '';
+  const safeExpr = onChangeExpr.replace(/this\.value/g, 'value');
+  const id = 'dp_' + Math.random().toString(36).slice(2, 8);
+  return `<span class="date-wrap"><span class="date-label" id="${id}" onclick="this.style.display='none';var inp=this.nextElementSibling;inp.style.display='';requestAnimationFrame(function(){inp.showPicker()})">${display}</span><input type="date" class="date-inline" style="display:none" value="${val}" onchange="(function(value){${safeExpr}})(this.value);var lbl=this.previousElementSibling;lbl.textContent=value?formatOrdinal(value):'${placeholder||'Set date'}';lbl.style.display='';this.style.display='none'" onblur="var lbl=this.previousElementSibling;lbl.style.display='';this.style.display='none'"></span>`;
 }
 
 function getCycleBudgets(card, cycleStart) {
@@ -2325,6 +2485,8 @@ function updateCycleBudget(card, cycleStart, field, val) {
   else if (field.startsWith('cat:')) entry.cats[field.slice(4)] = parseFloat(val) || 0;
   persist();
   renderExpenses();
+  if (settingsOpen) renderSettings();
+  if (expSettingsOpen) renderExpSettings();
 }
 
 function updateCardBudget(card, field, val) {
@@ -2332,6 +2494,8 @@ function updateCardBudget(card, field, val) {
   cardBudgets[card][field] = val;
   persist();
   renderExpenses();
+  if (settingsOpen) renderSettings();
+  if (expSettingsOpen) renderExpSettings();
 }
 
 // --- Category combo (select + inline new) ---
@@ -2522,7 +2686,7 @@ function persistExpenses() {
 let addingNewCat = false;
 function promptAddCategory() {
   addingNewCat = true;
-  renderExpenses();
+  if (expSettingsOpen) renderExpSettings();
   const inp = document.getElementById('newCatInput');
   if (inp) inp.focus();
 }
@@ -2533,10 +2697,12 @@ function commitNewCategory(input) {
     categories.push(name);
     persist();
   }
+  if (expSettingsOpen) renderExpSettings();
   renderExpenses();
 }
 function cancelNewCategory() {
   addingNewCat = false;
+  if (expSettingsOpen) renderExpSettings();
   renderExpenses();
 }
 
@@ -2550,6 +2716,26 @@ function navExpMonth(dir) {
   expViewMonth += dir;
   if (expViewMonth > 11) { expViewMonth = 0; expViewYear++; }
   if (expViewMonth < 0) { expViewMonth = 11; expViewYear--; }
+  renderExpenses();
+}
+
+function goExpToday() {
+  const now = new Date();
+  expViewMonth = now.getMonth();
+  expViewYear = now.getFullYear();
+  // Reset all card cycles to current month
+  const y = now.getFullYear(), m = now.getMonth();
+  const start = dateKey(y, m, 1);
+  const nextM = new Date(y, m + 1, 1);
+  const end = dateKey(nextM.getFullYear(), nextM.getMonth(), nextM.getDate());
+  for (const card of cardNames) {
+    const cb = cardBudgets[card];
+    if (cb) {
+      cb.cycleStart = start;
+      cb.cycleEnd = end;
+    }
+  }
+  persist();
   renderExpenses();
 }
 
@@ -2655,16 +2841,11 @@ function renderExpenses() {
     const cycleBud = getCycleBudgets(expCardFilter, start);
     activeCycleStart = start;
     activeCycleBud = cycleBud;
-    document.getElementById('expMonthTitle').textContent = expCardFilter.toUpperCase();
-    const ds = 'background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;padding:2px 0;font-family:var(--font);outline:none';
-    const ls = 'font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em';
+    const startD = parseDate(start);
+    const monthName = (startD && !isNaN(startD.getTime())) ? MONTH_NAMES[startD.getMonth()] : '—';
+    document.getElementById('expMonthTitle').textContent = monthName + ' // ' + expCardFilter.toUpperCase();
     document.querySelector('.exp-nav').innerHTML = `
       <button class="arrow-btn" onclick="navExpCycle(-1)">&#8249;</button>
-      <input type="date" style="${ds}" value="${start}"
-        onchange="updateCardBudget('${expCardFilter}','cycleStart',this.value)">
-      <span style="${ls}">\u2013</span>
-      <input type="date" style="${ds}" value="${end}"
-        onchange="updateCardBudget('${expCardFilter}','cycleEnd',this.value)">
       <button class="arrow-btn" onclick="navExpCycle(1)">&#8250;</button>`;
     document.querySelector('.exp-nav').style.display = '';
 
@@ -2676,50 +2857,88 @@ function renderExpenses() {
     spent = filteredExps.reduce((s, e) => s + e.amount, 0);
     remaining = budget - spent;
 
-    // Budget section: card cycle view
+    // Conversational header
+    const cycleFrom = dateSpan(start, `updateCardBudget('${expCardFilter}','cycleStart',this.value)`);
+    const cycleTo = dateSpan(end, `updateCardBudget('${expCardFilter}','cycleEnd',this.value)`);
+    const dueExpr = `updateCycleBudget('${expCardFilter}','${start}','dueDate',this.value)`;
+    const dueLine = cycleBud.dueDate
+      ? `You'll owe ${fmt(spent)} on ${dateSpan(cycleBud.dueDate, dueExpr)}.`
+      : `You'll owe ${fmt(spent)}. ${dateSpan('', dueExpr, 'Set due date')}.`;
+    let remLine;
+    if (!budget) {
+      remLine = `Set a budget in <span style="cursor:pointer;border-bottom:1px dashed var(--border)" onclick="toggleExpSettings()">Settings</span> to track spending.`;
+    } else if (remaining >= 0) {
+      remLine = `You have <span class="remaining">${fmt(remaining)}</span> left in your budget.`;
+    } else {
+      remLine = `You're <span class="over">${fmt(Math.abs(remaining))}</span> over budget.`;
+    }
+
     document.getElementById('expBudgetSection').innerHTML = `
-      <div class="exp-budget-label">${expCardFilter.toUpperCase()} Budget <button onclick="promptAddCategory()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;opacity:0.6;padding:0;margin-left:8px">+ Add Category</button></div>
-      <div class="exp-budget-row">
-        <div class="exp-budget-field">
-          <label>Budget</label>
-          <input class="exp-budget-input" type="number" inputmode="decimal"
-            value="${budget || ''}" placeholder="0"
-            onchange="updateCycleBudget('${expCardFilter}','${start}','total',this.value)">
-        </div>
-        <div class="exp-budget-field">
-          <label>Due Date</label>
-          <input type="date" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:14px;padding:4px 0;font-family:var(--font);outline:none"
-            value="${cycleBud.dueDate || ''}"
-            onchange="updateCycleBudget('${expCardFilter}','${start}','dueDate',this.value)">
-        </div>
-      </div>
-      <div class="exp-budget-cats" id="expBudgetCats" style="margin-top:12px"></div>`;
+      <div class="exp-header-text">
+        Your statement cycle is from ${cycleFrom} to ${cycleTo}.<br>
+        ${dueLine}<br>
+        ${remLine}
+      </div>`;
   } else {
-    // All cards: calendar month view (existing behavior)
+    // All cards: show per-card due summaries
     const monthKey = `${expViewYear}-${String(expViewMonth + 1).padStart(2, '0')}`;
-    document.getElementById('expMonthTitle').textContent = `${MONTH_NAMES[expViewMonth]} ${expViewYear}`;
+    document.getElementById('expMonthTitle').textContent = MONTH_NAMES[expViewMonth];
     document.querySelector('.exp-nav').innerHTML = `
       <button class="arrow-btn" onclick="navExpMonth(-1)">&#8249;</button>
       <button class="arrow-btn" onclick="navExpMonth(1)">&#8250;</button>`;
     document.querySelector('.exp-nav').style.display = '';
 
-    budget = expBudget;
+    // Build per-card summary lines
+    const cardLines = [];
+    let totalBudget = 0, totalSpent = 0;
+    for (const card of cardNames) {
+      const { start, end } = getCycleRange(card);
+      const cycleBud = getCycleBudgets(card, start);
+      const cardExps = expenses.filter(e => (e.card || 'Amex') === card && e.date && e.date >= start && e.date < end);
+      const cardSpent = cardExps.reduce((s, e) => s + e.amount, 0);
+      totalBudget += (cycleBud.total || 0);
+      totalSpent += cardSpent;
+      const dueExpr = `updateCycleBudget('${card}','${start}','dueDate',this.value)`;
+      const duePart = cycleBud.dueDate
+        ? ` on ${dateSpan(cycleBud.dueDate, dueExpr)}`
+        : `. ${dateSpan('', dueExpr, 'Set date')}`;
+      const colorVar = `var(--card-${card.toLowerCase()})`;
+      cardLines.push({
+        dueDate: cycleBud.dueDate || '9999-99-99',
+        html: `<div class="exp-card-due-line">${fmt(cardSpent)} due to <span class="card-name" style="color:${colorVar}">${card.toUpperCase()}</span>${duePart}${cycleBud.dueDate ? '.' : ''}</div>`
+      });
+    }
+    cardLines.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+    const totalRemaining = totalBudget - totalSpent;
+    let totalLine;
+    if (!totalBudget) {
+      totalLine = `Set card budgets in <span style="cursor:pointer;border-bottom:1px dashed var(--border)" onclick="toggleExpSettings()">Settings</span> to track spending.`;
+    } else if (totalRemaining >= 0) {
+      totalLine = `You have <span class="remaining">${fmt(totalRemaining)}</span> left in your total budget.`;
+    } else {
+      totalLine = `You're <span class="over">${fmt(Math.abs(totalRemaining))}</span> over your total budget.`;
+    }
+
+    // Sum per-category budgets across all cards
+    const allCats = {};
+    for (const card of cardNames) {
+      const { start } = getCycleRange(card);
+      const cb = getCycleBudgets(card, start);
+      for (const [c, v] of Object.entries(cb.cats || {})) allCats[c] = (allCats[c] || 0) + v;
+    }
+    activeCycleBud = { total: totalBudget, cats: allCats };
+
+    budget = totalBudget;
     const monthExps = expenses.filter(e => e.date && e.date.substring(0, 7) === monthKey);
     filteredExps = monthExps;
     spent = filteredExps.reduce((s, e) => s + e.amount, 0);
-    remaining = budget - spent;
+    remaining = totalBudget - spent;
 
-    // Budget section: monthly view (existing)
     document.getElementById('expBudgetSection').innerHTML = `
-      <div class="exp-budget-label">Monthly Budget <button onclick="promptAddCategory()" style="background:none;border:none;color:var(--text2);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;opacity:0.6;padding:0;margin-left:8px">+ Add Category</button></div>
-      <div class="exp-budget-row">
-        <div class="exp-budget-field">
-          <label>Total</label>
-          <input class="exp-budget-input" type="number" inputmode="decimal" id="expBudgetInput"
-            value="${expBudget || ''}" placeholder="0"
-            onchange="updateExpBudget(this.value)">
-        </div>
-        <div class="exp-budget-cats" id="expBudgetCats"></div>
+      <div class="exp-header-text">
+        ${cardLines.map(l => l.html).join('\n        ')}
+        <div style="margin-top:6px">${totalLine}</div>
       </div>`;
   }
 
@@ -2732,40 +2951,8 @@ function renderExpenses() {
       <button class="card-filter-btn${expCardFilter === 'Chase' ? ' active' : ''}" data-card="Chase" onclick="setExpCardFilter('Chase')">CHASE</button>
     </div>`;
 
-  // Render category budget inputs (scoped to filteredExps regardless of mode)
-  document.getElementById('expBudgetCats').innerHTML = categories.map(c => {
-    const esc = c.replace(/'/g, "\\'");
-    if (editingCatName === c) {
-      return `<div class="exp-budget-cat-field">
-        <div class="cat-edit-row" onclick="event.stopPropagation()" style="margin:0;padding:2px 0;border:none">
-          <input type="text" id="catRenameInput" class="cat-rename-input" value="${c}" style="font-size:10px"
-            onkeydown="if(event.key==='Enter')renameCategory('${esc}');if(event.key==='Escape')toggleCatEdit(null)">
-          <button class="cat-edit-btn" onclick="renameCategory('${esc}')">SAVE</button>
-          <button class="cat-edit-btn cat-del-btn" onclick="deleteCategory('${esc}')">DELETE</button>
-        </div>
-      </div>`;
-    }
-    return `<div class="exp-budget-cat-field">
-      <label onclick="toggleCatEdit('${esc}')" style="cursor:pointer">${c}</label>
-      <input type="number" inputmode="decimal" value="${activeCycleBud ? (activeCycleBud.cats[c] || '') : (catBudgets[c] || '')}" placeholder="0" onchange="${activeCycleStart ? `updateCycleBudget('${expCardFilter}','${activeCycleStart}','cat:${esc}',this.value)` : `updateCatBudget('${esc}', this.value)`}">
-    </div>`;
-  }).join('') + (addingNewCat ? `<div class="exp-budget-cat-field">
-      <input type="text" id="newCatInput" placeholder="NAME" style="font-size:9px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.1em;background:transparent;border:none;border-bottom:1px solid var(--accent);padding:2px 0;font-family:var(--font);outline:none;width:80px"
-        onkeydown="if(event.key==='Enter')commitNewCategory(this);if(event.key==='Escape')cancelNewCategory()"
-        onblur="commitNewCategory(this)">
-    </div>` : '');
-
-  const remClass = remaining >= 0 ? 'positive' : 'negative';
-
-  document.getElementById('expSummary').innerHTML = `
-    <div class="exp-summary-item">
-      <span class="exp-summary-label">Remaining</span>
-      <span class="exp-summary-value ${remClass}">${fmt(remaining)}</span>
-    </div>
-    <div class="exp-summary-item">
-      <span class="exp-summary-label">Spent</span>
-      <span class="exp-summary-value negative">${fmt(spent)}</span>
-    </div>`;
+  // Summary is now part of the conversational header — clear the old summary area
+  document.getElementById('expSummary').innerHTML = '';
 
   // Group by category
   const groups = {};
@@ -2808,7 +2995,7 @@ function renderExpenses() {
 
   for (const cat of catOrder) {
     const items = groups[cat] || [];
-    if (!items.length && !mobile) continue;
+    if (!items.length && !mobile && !isCardView) continue;
     const total = items.reduce((s, e) => s + e.amount, 0);
 
     const catBud = activeCycleBud ? (activeCycleBud.cats[cat] || 0) : (catBudgets[cat] || 0);
@@ -2826,13 +3013,15 @@ function renderExpenses() {
       // Remaining number: show budget remaining if budget set, otherwise just spent
       let remHtml, spentHtml;
       if (catBud) {
-        const remValCls = catRem >= 0 ? 'positive' : 'negative';
-        remHtml = `<div class="exp-cat-tile-remaining ${remValCls}">${fmt(catRem)}</div>`;
-        spentHtml = `<div class="exp-cat-tile-spent">SPENT ${fmt(total)} OF ${fmt(catBud)}</div>`;
+        const over = catRem < 0;
+        const remValCls = over ? 'negative' : 'positive';
+        const remLabel = over ? `${fmt(Math.abs(catRem))} Over` : `${fmt(catRem)} Remaining`;
+        remHtml = `<div class="exp-cat-tile-remaining ${remValCls}">${remLabel}</div>`;
+        spentHtml = `<div class="exp-cat-tile-spent">${fmt(total)} Spent &middot; ${fmt(catBud)} Budget</div>`;
       } else {
         const zeroCls = total ? '' : ' zero';
-        remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? fmt(total) : '$0'}</div>`;
-        spentHtml = total ? `<div class="exp-cat-tile-spent">SPENT</div>` : '';
+        remHtml = `<div class="exp-cat-tile-remaining${zeroCls}" style="color:var(--accent-red)">${total ? `${fmt(total)} Spent` : '$0'}</div>`;
+        spentHtml = '';
       }
       // Preview items (top 3 collapsed, all when expanded)
       const expanded = expandedExpCats.has(cat);
@@ -2863,7 +3052,7 @@ function renderExpenses() {
     } else {
       colsHtml += `
         <div class="exp-column">
-          <div class="exp-col-header">${cat}<span style="float:right">${catBud ? `<span style="font-weight:700;color:${catRem >= 0 ? '#4A7A3A' : 'var(--accent-red)'}">${fmt(catRem)} LEFT</span> <span style="font-weight:700;color:rgba(196,73,42,0.5);font-size:9px;margin-left:8px">${fmt(total)} SPENT</span>` : `<span style="font-weight:700;color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</span>`}</span></div>
+          <div class="exp-col-header"><div>${cat}</div><div style="margin-top:2px">${catBud ? `<span style="font-weight:700;color:${catRem >= 0 ? '#4A7A3A' : 'var(--accent-red)'}">${catRem < 0 ? fmt(Math.abs(catRem))+' OVER' : fmt(catRem)+' LEFT'}</span> <span style="font-weight:700;color:rgba(196,73,42,0.5);font-size:9px;margin-left:8px">${fmt(total)} SPENT &middot; ${fmt(catBud)} BUDGET</span>` : `<span style="font-weight:700;color:rgba(196,73,42,0.5)">${fmt(total)} SPENT</span>`}</div></div>
           <div class="exp-col-items">${buildItemsHtml(items)}</div>
         </div>`;
     }
@@ -2885,6 +3074,7 @@ function switchTab(id) {
   document.querySelector('.gear-btn').style.display = id === 'calendar' ? '' : 'none';
 
   if (id !== 'calendar' && settingsOpen) toggleSettings();
+  if (id !== 'expenses' && expSettingsOpen) toggleExpSettings();
 
   if (id === 'log') { refreshCatList(); renderLogRecent(); }
   if (id === 'growth') calcGrowthNow();
