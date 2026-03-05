@@ -2415,14 +2415,7 @@ let cardBudgets = load('cardBudgets') || {
 for (const card of Object.keys(cardBudgets)) {
   const cb = cardBudgets[card];
   if (cb.closeDay && !cb.cycleStart) {
-    const closeDay = Math.min(parseInt(cb.closeDay) || 1, 28);
-    const y = today.getFullYear(), m = today.getMonth();
-    const thisClose = new Date(y, m, closeDay);
-    const startD = thisClose <= today ? thisClose : new Date(y, m - 1, closeDay);
-    const endD = new Date(startD.getFullYear(), startD.getMonth() + 1, closeDay);
-    cb.cycleStart = dateKey(startD.getFullYear(), startD.getMonth(), startD.getDate());
-    cb.cycleEnd = dateKey(endD.getFullYear(), endD.getMonth(), endD.getDate());
-    delete cb.closeDay;
+    // closeDay is the primary setting; cycleStart is a nav anchor computed on demand
     delete cb.dueDay;
   }
   // Migrate flat budget/dueDate into per-cycle budgets object
@@ -2439,15 +2432,11 @@ function getCycleRange(card) {
   const cb = cardBudgets[card] || {};
   let start = cb.cycleStart || defaultCycleStart();
   let end = cb.cycleEnd || defaultCycleEnd();
-  // Validate — reset to defaults if dates are invalid
   if (isNaN(new Date(start + 'T00:00:00').getTime())) start = defaultCycleStart();
   if (isNaN(new Date(end + 'T00:00:00').getTime())) end = defaultCycleEnd();
   const s = new Date(start + 'T00:00:00');
   const e = new Date(end + 'T00:00:00');
-  return {
-    start, end,
-    label: `${fmtCycleDate(s)} \u2013 ${fmtCycleDate(e)}`
-  };
+  return { start, end, label: `${fmtCycleDate(s)} \u2013 ${fmtCycleDate(e)}` };
 }
 
 function navExpCycle(dir) {
@@ -2457,16 +2446,8 @@ function navExpCycle(dir) {
   const { start, end } = getCycleRange(card);
   const s = new Date(start + 'T00:00:00');
   const e = new Date(end + 'T00:00:00');
-  const lenMs = e - s;
-  if (!lenMs || isNaN(lenMs)) return;
-  let newStart, newEnd;
-  if (dir > 0) {
-    newStart = e;
-    newEnd = new Date(e.getTime() + lenMs);
-  } else {
-    newEnd = s;
-    newStart = new Date(s.getTime() - lenMs);
-  }
+  const newStart = new Date(s.getFullYear(), s.getMonth() + dir, s.getDate());
+  const newEnd = new Date(e.getFullYear(), e.getMonth() + dir, e.getDate());
   cb.cycleStart = dateKey(newStart.getFullYear(), newStart.getMonth(), newStart.getDate());
   cb.cycleEnd = dateKey(newEnd.getFullYear(), newEnd.getMonth(), newEnd.getDate());
   persist();
@@ -2517,6 +2498,8 @@ function updateCycleBudget(card, cycleStart, field, val) {
 function updateCardBudget(card, field, val) {
   if (!cardBudgets[card]) cardBudgets[card] = {};
   cardBudgets[card][field] = val;
+  // When closeDay changes, clear cycleStart so getCycleRange recomputes from today
+  if (field === 'closeDay') delete cardBudgets[card].cycleStart;
   persist();
   renderExpenses();
   if (settingsOpen) renderSettings();
@@ -2706,6 +2689,14 @@ function persistExpenses() {
       }))).then();
     }
   });
+
+  // Sync budgets to settings row
+  sb.from('settings').upsert({
+    user_id: currentUserId,
+    exp_budget: expBudget,
+    cat_budgets: catBudgets,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' }).then();
 }
 
 let addingNewCat = false;
@@ -2777,16 +2768,13 @@ function goExpToday() {
   const now = new Date();
   expViewMonth = now.getMonth();
   expViewYear = now.getFullYear();
-  // Reset all card cycles to current month
-  const y = now.getFullYear(), m = now.getMonth();
-  const start = dateKey(y, m, 1);
-  const nextM = new Date(y, m + 1, 1);
-  const end = dateKey(nextM.getFullYear(), nextM.getMonth(), nextM.getDate());
+  // Reset all card cycles to current period
   for (const card of cardNames) {
     const cb = cardBudgets[card];
     if (cb) {
-      cb.cycleStart = start;
-      cb.cycleEnd = end;
+      // Delete cycleStart; getCycleRange will recompute from today (respects closeDay)
+      delete cb.cycleStart;
+      delete cb.cycleEnd;
     }
   }
   persist();
@@ -2896,8 +2884,9 @@ function renderExpenses() {
     activeCycleStart = start;
     activeCycleBud = cycleBud;
     const startD = parseDate(start);
-    const monthName = (startD && !isNaN(startD.getTime())) ? MONTH_NAMES[startD.getMonth()] : '—';
-    document.getElementById('expMonthTitle').textContent = monthName + ' // ' + expCardFilter.toUpperCase();
+    const endD = parseDate(end);
+    const cycleLabel = `${fmtCycleDate(startD)} \u2013 ${fmtCycleDate(endD)}`;
+    document.getElementById('expMonthTitle').textContent = cycleLabel;
     document.querySelector('.exp-nav').innerHTML = `
       <button class="arrow-btn" onclick="navExpCycle(-1)">&#8249;</button>
       <button class="arrow-btn" onclick="navExpCycle(1)">&#8250;</button>`;
@@ -2929,7 +2918,7 @@ function renderExpenses() {
 
     document.getElementById('expBudgetSection').innerHTML = `
       <div class="exp-header-text">
-        Your statement cycle is from ${cycleFrom} to ${cycleTo}.<br>
+        Statement cycle: ${cycleFrom} &ndash; ${cycleTo}.<br>
         ${dueLine}<br>
         ${remLine}
       </div>`;
@@ -3049,7 +3038,7 @@ function renderExpenses() {
 
   for (const cat of catOrder) {
     const items = groups[cat] || [];
-    if (!items.length && !mobile && !isCardView) continue;
+    if (!items.length && !mobile && !isCardView && !categories.includes(cat)) continue;
     const total = items.reduce((s, e) => s + e.amount, 0);
 
     const catBud = activeCycleBud ? (activeCycleBud.cats[cat] || 0) : (catBudgets[cat] || 0);
