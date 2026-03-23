@@ -1308,14 +1308,10 @@ function upsertSettings() {
   }, { onConflict: 'user_id' }).then();
 }
 
-// Upsert rows, then prune orphans. Never delete-all — skip if empty.
-function upsertAndPrune(table, rows) {
-  if (!currentUserId || !supabaseReady) return;
-  if (rows.length === 0) return; // Never delete all — orphan rows are harmless
-  sb.from(table).upsert(rows, { onConflict: 'id' }).then(() => {
-    const keepIds = rows.map(r => r.id);
-    sb.from(table).delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
-  });
+// Upsert rows to Supabase. No deletes — orphan rows are harmless, lost data is not.
+function syncRows(table, rows) {
+  if (!currentUserId || !supabaseReady || rows.length === 0) return;
+  sb.from(table).upsert(rows, { onConflict: 'id' }).then();
 }
 
 function persist() {
@@ -1338,12 +1334,12 @@ function persist() {
 
   upsertSettings();
 
-  upsertAndPrune('statements', statements.map(s => ({
+  syncRows('statements', statements.map(s => ({
     id: s.id, user_id: currentUserId, card: s.card,
     amount: s.amount, due_date: s.dueDate, hidden: s.hidden
   })));
 
-  upsertAndPrune('transactions', transactions.map(t => ({
+  syncRows('transactions', transactions.map(t => ({
     id: t.id, user_id: currentUserId, label: t.label,
     amount: t.amount, source: t.source, target: t.target,
     date: t.date, recurrence: t.recurrence,
@@ -1458,20 +1454,13 @@ async function loadFromSupabase() {
       expenses = [];
     }
 
-    // Merge ONLY if this device made edits while offline
+    // Merge local-only items ONLY if this device made edits while offline
     if (load('offlineEdits')) {
       mergeLocalItems(snap);
-      // Prefer local settings (user was actively editing offline on this device)
-      settings = snap.settings;
-      cardNames = snap.cardNames;
-      cardBudgets = snap.cardBudgets;
-      categories = snap.categories;
-      catBudgets = snap.catBudgets;
-      expBudget = snap.expBudget;
-      save('offlineEdits', false); // Clear the flag
+      save('offlineEdits', false);
     }
 
-    // Re-sync localStorage with merged data
+    // Re-sync localStorage with remote data
     save('settings', settings);
     save('cardNames', cardNames);
     save('cardBudgets', cardBudgets);
@@ -2796,7 +2785,7 @@ function persistExpenses() {
     return;
   }
 
-  upsertAndPrune('expenses', expenses.map(e => ({
+  syncRows('expenses', expenses.map(e => ({
     id: e.id, user_id: currentUserId, label: e.label,
     amount: e.amount, category: e.category, date: e.date, card: e.card
   })));
