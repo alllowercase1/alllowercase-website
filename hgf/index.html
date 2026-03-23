@@ -1226,7 +1226,16 @@ let supabaseReady = false; // Only true after successful loadFromSupabase — pr
 function load(key) {
   try { return JSON.parse(localStorage.getItem('fc_' + key)); } catch { return null; }
 }
-function save(key, val) { localStorage.setItem('fc_' + key, JSON.stringify(val)); }
+function save(key, val) {
+  try { localStorage.setItem('fc_' + key, JSON.stringify(val)); }
+  catch (e) { console.error('localStorage save failed:', key, e); showSyncToast('Storage full — changes may not persist locally'); }
+}
+function showSyncToast(msg) {
+  let t = document.getElementById('syncToast');
+  if (!t) { t = document.createElement('div'); t.id = 'syncToast'; t.style.cssText = 'position:fixed;bottom:50px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#E2DDD6;font-family:var(--font);font-size:10px;padding:8px 16px;letter-spacing:0.1em;text-transform:uppercase;z-index:9999;opacity:0;transition:opacity 0.3s'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
 
 let settings = load('settings') || {
   checkingBalance: 0, savingsBalance: 0, showSavings: false,
@@ -1260,9 +1269,11 @@ if (!statements) {
 // Auto-hide past-due statements (called in init after today is defined)
 function autoHideStatements() {
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  let changed = false;
   for (const s of statements) {
-    if (s.dueDate < todayKey && !s.hidden) s.hidden = true;
+    if (s.dueDate < todayKey && !s.hidden) { s.hidden = true; changed = true; }
   }
+  return changed;
 }
 
 // Migrate old adHocIncome → transactions
@@ -1276,20 +1287,9 @@ if (!transactions) {
   }));
 }
 
-function persist() {
-  save('settings', settings);
-  save('cardNames', cardNames);
-  save('categories', categories);
-  save('statements', statements);
-  save('transactions', transactions);
-  save('expenses', expenses);
-  save('expBudget', expBudget);
-  save('catBudgets', catBudgets);
-  save('cardBudgets', cardBudgets);
-
-  // Supabase (fire-and-forget — only if logged in AND we've loaded successfully)
+// Full settings upsert — used by both persist() and persistExpenses()
+function upsertSettings() {
   if (!currentUserId || !supabaseReady) return;
-
   sb.from('settings').upsert({
     user_id: currentUserId,
     checking_balance: settings.checkingBalance,
@@ -1306,39 +1306,99 @@ function persist() {
     exp_budget: expBudget,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' }).then();
+}
 
-  // Upsert first (safe — never deletes), then prune orphaned rows
-  const stRows = statements.map(s => ({
+// Upsert rows, then prune orphans. Never delete-all — skip if empty.
+function upsertAndPrune(table, rows) {
+  if (!currentUserId || !supabaseReady) return;
+  if (rows.length === 0) return; // Never delete all — orphan rows are harmless
+  sb.from(table).upsert(rows, { onConflict: 'id' }).then(() => {
+    const keepIds = rows.map(r => r.id);
+    sb.from(table).delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
+  });
+}
+
+function persist() {
+  save('settings', settings);
+  save('cardNames', cardNames);
+  save('categories', categories);
+  save('statements', statements);
+  save('transactions', transactions);
+  save('expenses', expenses);
+  save('expBudget', expBudget);
+  save('catBudgets', catBudgets);
+  save('cardBudgets', cardBudgets);
+
+  // Supabase (fire-and-forget — only if logged in AND we've loaded successfully)
+  if (!currentUserId || !supabaseReady) return;
+
+  upsertSettings();
+
+  upsertAndPrune('statements', statements.map(s => ({
     id: s.id, user_id: currentUserId, card: s.card,
     amount: s.amount, due_date: s.dueDate, hidden: s.hidden
-  }));
-  if (stRows.length > 0) {
-    sb.from('statements').upsert(stRows, { onConflict: 'id' }).then(() => {
-      const keepIds = stRows.map(r => r.id);
-      sb.from('statements').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
-    });
-  } else {
-    sb.from('statements').delete().eq('user_id', currentUserId).then();
-  }
+  })));
 
-  const txRows = transactions.map(t => ({
+  upsertAndPrune('transactions', transactions.map(t => ({
     id: t.id, user_id: currentUserId, label: t.label,
     amount: t.amount, source: t.source, target: t.target,
     date: t.date, recurrence: t.recurrence,
     day_of_month: t.dayOfMonth, interval_days: t.intervalDays
-  }));
-  if (txRows.length > 0) {
-    sb.from('transactions').upsert(txRows, { onConflict: 'id' }).then(() => {
-      const keepIds = txRows.map(r => r.id);
-      sb.from('transactions').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
-    });
-  } else {
-    sb.from('transactions').delete().eq('user_id', currentUserId).then();
-  }
+  })));
 }
 
 // --- Supabase sync ---
+function snapshotState() {
+  return {
+    settings: JSON.parse(JSON.stringify(settings)),
+    cardNames: [...cardNames],
+    cardBudgets: JSON.parse(JSON.stringify(cardBudgets)),
+    categories: [...categories],
+    catBudgets: JSON.parse(JSON.stringify(catBudgets)),
+    expBudget,
+    statements: statements.map(s => ({...s})),
+    transactions: transactions.map(t => ({...t})),
+    expenses: expenses.map(e => ({...e}))
+  };
+}
+
+function restoreSnapshot(snap) {
+  settings = snap.settings;
+  cardNames = snap.cardNames;
+  cardBudgets = snap.cardBudgets;
+  categories = snap.categories;
+  catBudgets = snap.catBudgets;
+  expBudget = snap.expBudget;
+  statements = snap.statements;
+  transactions = snap.transactions;
+  expenses = snap.expenses;
+}
+
+// Merge local-only items (by ID) back into current state after remote load
+function mergeLocalItems(snap) {
+  const remoteStIds = new Set(statements.map(s => s.id));
+  for (const s of snap.statements) {
+    if (!remoteStIds.has(s.id)) statements.push(s);
+  }
+  const remoteTxIds = new Set(transactions.map(t => t.id));
+  for (const t of snap.transactions) {
+    if (!remoteTxIds.has(t.id)) transactions.push(t);
+  }
+  const remoteExpIds = new Set(expenses.map(e => e.id));
+  for (const e of snap.expenses) {
+    if (!remoteExpIds.has(e.id)) expenses.push(e);
+  }
+}
+
+// Check if snapshot has non-default settings (user was editing on this device)
+function hasLocalEdits(snap) {
+  return snap.settings.checkingBalance !== 0 || snap.settings.savingsBalance !== 0 ||
+    snap.settings.rent.amount !== 0 || snap.settings.paycheck.amount !== 0 ||
+    snap.statements.length > 0 || snap.transactions.length > 0 || snap.expenses.length > 0;
+}
+
 async function loadFromSupabase() {
+  const snap = snapshotState(); // Snapshot for rollback + merge
   try {
     // Use maybeSingle() — returns null (not an error) when no row exists
     const { data: sData, error: sErr } = await sb.from('settings').select('*').eq('user_id', currentUserId).maybeSingle();
@@ -1369,16 +1429,13 @@ async function loadFromSupabase() {
 
     const { data: stData, error: stErr } = await sb.from('statements').select('*').eq('user_id', currentUserId);
     if (stErr) throw stErr;
-    // Only overwrite local data if Supabase actually has rows (don't replace local data with nothing)
     if (stData && stData.length > 0) {
       statements = stData.map(s => ({
         id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
       }));
     } else if (sData) {
-      // Settings exist but no statements — user genuinely has none
       statements = [];
     }
-    // else: no settings row either — Supabase is empty for this user, keep local data
 
     const { data: txData, error: txErr } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
     if (txErr) throw txErr;
@@ -1404,7 +1461,21 @@ async function loadFromSupabase() {
       expenses = [];
     }
 
-    // Re-sync localStorage with remote data
+    // Merge: if this device had local edits, keep local-only items + prefer local settings
+    if (hasLocalEdits(snap)) {
+      mergeLocalItems(snap);
+      // If local settings were non-default and remote exists, prefer local (user was editing offline)
+      if (sData && snap.settings.checkingBalance !== 0) {
+        settings = snap.settings;
+        cardNames = snap.cardNames;
+        cardBudgets = snap.cardBudgets;
+        categories = snap.categories;
+        catBudgets = snap.catBudgets;
+        expBudget = snap.expBudget;
+      }
+    }
+
+    // Re-sync localStorage with merged data
     save('settings', settings);
     save('cardNames', cardNames);
     save('cardBudgets', cardBudgets);
@@ -1419,10 +1490,10 @@ async function loadFromSupabase() {
     document.getElementById('syncBadge').style.display = 'none';
     console.log('loadFromSupabase: success, supabaseReady=true');
   } catch (err) {
-    // Supabase unreachable — fall back to localStorage data already in memory
-    // supabaseReady stays false — persist() will NOT overwrite remote data
+    // Rollback to pre-load state — no partial overwrites
+    restoreSnapshot(snap);
     document.getElementById('syncBadge').style.display = 'block';
-    console.warn('loadFromSupabase failed, using localStorage (writes blocked):', err);
+    console.warn('loadFromSupabase failed, rolled back to local data:', err);
   }
 }
 
@@ -2726,26 +2797,13 @@ function persistExpenses() {
 
   if (!currentUserId || !supabaseReady) return;
 
-  const expRows = expenses.map(e => ({
+  upsertAndPrune('expenses', expenses.map(e => ({
     id: e.id, user_id: currentUserId, label: e.label,
     amount: e.amount, category: e.category, date: e.date, card: e.card
-  }));
-  if (expRows.length > 0) {
-    sb.from('expenses').upsert(expRows, { onConflict: 'id' }).then(() => {
-      const keepIds = expRows.map(r => r.id);
-      sb.from('expenses').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
-    });
-  } else {
-    sb.from('expenses').delete().eq('user_id', currentUserId).then();
-  }
+  })));
 
-  // Sync budgets to settings row
-  sb.from('settings').upsert({
-    user_id: currentUserId,
-    exp_budget: expBudget,
-    cat_budgets: catBudgets,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id' }).then();
+  // Full settings upsert — never partial
+  upsertSettings();
 }
 
 let addingNewCat = false;
@@ -3452,7 +3510,7 @@ function fmtShort(n) {
       await loadFromSupabase();
     }
 
-    autoHideStatements();
+    if (autoHideStatements()) persist();
     render();
     refreshCatList();
     renderLogRecent();
@@ -3500,6 +3558,22 @@ window.addEventListener('resize', () => {
   }
 });
 
+// --- Cross-tab sync: reload when another tab writes to localStorage ---
+window.addEventListener('storage', (e) => {
+  if (e.key && e.key.startsWith('fc_') && e.key !== 'fc_cached_user_id') {
+    settings = load('settings') || settings;
+    cardNames = load('cardNames') || cardNames;
+    statements = load('statements') || statements;
+    transactions = load('transactions') || transactions;
+    expenses = load('expenses') || expenses;
+    expBudget = load('expBudget') ?? expBudget;
+    catBudgets = load('catBudgets') || catBudgets;
+    cardBudgets = load('cardBudgets') || cardBudgets;
+    categories = load('categories') || categories;
+    render();
+  }
+});
+
 // --- Reconnect: retry sync when tab becomes visible or network returns ---
 async function retrySync() {
   if (!currentUserId) return;
@@ -3510,29 +3584,10 @@ async function retrySync() {
     return;
   }
 
-  // Never loaded from Supabase — snapshot local data, load remote, then merge
+  // Never loaded from Supabase — loadFromSupabase() handles snapshot/merge internally
   console.log('retrySync: attempting first connect...');
-  const localStatements = [...statements];
-  const localTransactions = [...transactions];
-  const localExpenses = [...expenses];
-
   await loadFromSupabase();
-
   if (supabaseReady) {
-    // Merge: add any locally-created items that aren't in Supabase
-    const remoteStIds = new Set(statements.map(s => s.id));
-    for (const s of localStatements) {
-      if (!remoteStIds.has(s.id)) statements.push(s);
-    }
-    const remoteTxIds = new Set(transactions.map(t => t.id));
-    for (const t of localTransactions) {
-      if (!remoteTxIds.has(t.id)) transactions.push(t);
-    }
-    const remoteExpIds = new Set(expenses.map(e => e.id));
-    for (const e of localExpenses) {
-      if (!remoteExpIds.has(e.id)) expenses.push(e);
-    }
-
     persist(); persistExpenses();
     render();
   }
