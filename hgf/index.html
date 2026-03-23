@@ -1330,7 +1330,11 @@ function persist() {
   save('cardBudgets', cardBudgets);
 
   // Supabase (fire-and-forget — only if logged in AND we've loaded successfully)
-  if (!currentUserId || !supabaseReady) return;
+  if (!currentUserId || !supabaseReady) {
+    // Mark that we have unsynced local edits (for merge on reconnect)
+    if (currentUserId && !supabaseReady) save('offlineEdits', true);
+    return;
+  }
 
   upsertSettings();
 
@@ -1388,13 +1392,6 @@ function mergeLocalItems(snap) {
   for (const e of snap.expenses) {
     if (!remoteExpIds.has(e.id)) expenses.push(e);
   }
-}
-
-// Check if snapshot has non-default settings (user was editing on this device)
-function hasLocalEdits(snap) {
-  return snap.settings.checkingBalance !== 0 || snap.settings.savingsBalance !== 0 ||
-    snap.settings.rent.amount !== 0 || snap.settings.paycheck.amount !== 0 ||
-    snap.statements.length > 0 || snap.transactions.length > 0 || snap.expenses.length > 0;
 }
 
 async function loadFromSupabase() {
@@ -1461,18 +1458,17 @@ async function loadFromSupabase() {
       expenses = [];
     }
 
-    // Merge: if this device had local edits, keep local-only items + prefer local settings
-    if (hasLocalEdits(snap)) {
+    // Merge ONLY if this device made edits while offline
+    if (load('offlineEdits')) {
       mergeLocalItems(snap);
-      // If local settings were non-default and remote exists, prefer local (user was editing offline)
-      if (sData && snap.settings.checkingBalance !== 0) {
-        settings = snap.settings;
-        cardNames = snap.cardNames;
-        cardBudgets = snap.cardBudgets;
-        categories = snap.categories;
-        catBudgets = snap.catBudgets;
-        expBudget = snap.expBudget;
-      }
+      // Prefer local settings (user was actively editing offline on this device)
+      settings = snap.settings;
+      cardNames = snap.cardNames;
+      cardBudgets = snap.cardBudgets;
+      categories = snap.categories;
+      catBudgets = snap.catBudgets;
+      expBudget = snap.expBudget;
+      save('offlineEdits', false); // Clear the flag
     }
 
     // Re-sync localStorage with merged data
@@ -2795,7 +2791,10 @@ function persistExpenses() {
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
 
-  if (!currentUserId || !supabaseReady) return;
+  if (!currentUserId || !supabaseReady) {
+    if (currentUserId && !supabaseReady) save('offlineEdits', true);
+    return;
+  }
 
   upsertAndPrune('expenses', expenses.map(e => ({
     id: e.id, user_id: currentUserId, label: e.label,
