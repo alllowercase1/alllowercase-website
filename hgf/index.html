@@ -3483,10 +3483,38 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-// --- Reconnect: retry sync when tab becomes visible or network returns ---
+// --- Reconnect: push local state first (upsert = additive, no deletes), then load ---
 async function retrySync() {
   if (!currentUserId) return;
   if (!supabaseReady) {
+    // Push local items to Supabase before loading (upsert = same ID updates, new ID inserts)
+    try {
+      await sb.from('settings').upsert({
+        user_id: currentUserId,
+        checking_balance: settings.checkingBalance, savings_balance: settings.savingsBalance,
+        show_savings: settings.showSavings, rent_amount: settings.rent.amount,
+        rent_day_of_month: settings.rent.dayOfMonth, paycheck_amount: settings.paycheck.amount,
+        paycheck_seed_date: settings.paycheck.seedDate || null, card_names: cardNames,
+        card_budgets: cardBudgets, categories: categories, cat_budgets: catBudgets,
+        exp_budget: expBudget, updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      if (statements.length) await sb.from('statements').upsert(statements.map(s => ({
+        id: s.id, user_id: currentUserId, card: s.card, amount: s.amount, due_date: s.dueDate, hidden: s.hidden
+      })), { onConflict: 'id' });
+      if (transactions.length) await sb.from('transactions').upsert(transactions.map(t => ({
+        id: t.id, user_id: currentUserId, label: t.label, amount: t.amount, source: t.source,
+        target: t.target, date: t.date, recurrence: t.recurrence, day_of_month: t.dayOfMonth, interval_days: t.intervalDays
+      })), { onConflict: 'id' });
+      if (expenses.length) await sb.from('expenses').upsert(expenses.map(e => ({
+        id: e.id, user_id: currentUserId, label: e.label, amount: e.amount,
+        category: e.category, date: e.date, card: e.card
+      })), { onConflict: 'id' });
+      console.log('retrySync: pushed local state to Supabase');
+    } catch (err) {
+      console.warn('retrySync: push failed, still offline:', err);
+      return;
+    }
+    // Now load everything back (Supabase now has local + remote items merged)
     await loadFromSupabase();
     if (supabaseReady) render();
   }
