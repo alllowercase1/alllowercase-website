@@ -368,6 +368,13 @@ body.settings-open #app { margin-right: var(--sidebar-w); }
 }
 .gear-btn:hover { color: var(--text); }
 body.settings-open .gear-btn { opacity: 0; pointer-events: none; }
+.sync-badge {
+  position: fixed; top: 12px; right: 14px; z-index: 200;
+  font-family: var(--font); font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--red); opacity: 0.8;
+  display: none;
+}
 body.exp-settings-open #app { margin-right: var(--sidebar-w); }
 body.exp-settings-open .exp-settings-btn { opacity: 0; pointer-events: none; }
 .exp-add-cat-btn {
@@ -1187,6 +1194,7 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
   </div>
 </div>
 
+<div class="sync-badge" id="syncBadge">OFFLINE — NOT SYNCING</div>
 <button class="gear-btn" onclick="toggleSettings()" title="Settings">SETTINGS</button>
 
 <div class="sidebar" id="sidebar">
@@ -1408,16 +1416,12 @@ async function loadFromSupabase() {
     save('expenses', expenses);
 
     supabaseReady = true; // Safe to write back now
+    document.getElementById('syncBadge').style.display = 'none';
     console.log('loadFromSupabase: success, supabaseReady=true');
-
-    // If Supabase was empty but we have local data, push it up
-    if (!sData && (settings.checkingBalance || statements.length || transactions.length || expenses.length)) {
-      console.log('loadFromSupabase: Supabase empty but local data exists, pushing up');
-      persist(); persistExpenses();
-    }
   } catch (err) {
     // Supabase unreachable — fall back to localStorage data already in memory
     // supabaseReady stays false — persist() will NOT overwrite remote data
+    document.getElementById('syncBadge').style.display = 'block';
     console.warn('loadFromSupabase failed, using localStorage (writes blocked):', err);
   }
 }
@@ -3495,6 +3499,22 @@ window.addEventListener('resize', () => {
     render();
   }
 });
+
+// --- Reconnect: retry sync when tab becomes visible or network returns ---
+async function retrySync() {
+  if (supabaseReady || !currentUserId) return;
+  console.log('retrySync: attempting reconnect...');
+  await loadFromSupabase();
+  if (supabaseReady) {
+    // Flush local state to Supabase now that we're connected
+    persist(); persistExpenses();
+    render();
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') retrySync();
+});
+window.addEventListener('online', retrySync);
 
 // --- Init ---
 document.querySelector('.gear-btn').style.display = 'none';
