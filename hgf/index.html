@@ -1212,6 +1212,7 @@ const SUPABASE_URL = 'https://fjmhqaqnzktbcbkbahnf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbWhxYXFuemt0YmNia2JhaG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIyMDksImV4cCI6MjA4NzIxODIwOX0.US8vAJe9SwdC_LaKedyNqJNcn_bBXPvt39B7KNS9WIU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUserId = null;
+let supabaseReady = false; // Only true after successful loadFromSupabase — prevents empty-data overwrites
 
 // --- Data ---
 function load(key) {
@@ -1278,8 +1279,8 @@ function persist() {
   save('catBudgets', catBudgets);
   save('cardBudgets', cardBudgets);
 
-  // Supabase (fire-and-forget — only if logged in)
-  if (!currentUserId) return;
+  // Supabase (fire-and-forget — only if logged in AND we've loaded successfully)
+  if (!currentUserId || !supabaseReady) return;
 
   sb.from('settings').upsert({
     user_id: currentUserId,
@@ -1298,31 +1299,43 @@ function persist() {
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' }).then();
 
-  sb.from('statements').delete().eq('user_id', currentUserId).then(() => {
-    if (statements.length > 0) {
-      sb.from('statements').insert(statements.map(s => ({
-        id: s.id, user_id: currentUserId, card: s.card,
-        amount: s.amount, due_date: s.dueDate, hidden: s.hidden
-      }))).then();
-    }
-  });
+  // Upsert first (safe — never deletes), then prune orphaned rows
+  const stRows = statements.map(s => ({
+    id: s.id, user_id: currentUserId, card: s.card,
+    amount: s.amount, due_date: s.dueDate, hidden: s.hidden
+  }));
+  if (stRows.length > 0) {
+    sb.from('statements').upsert(stRows, { onConflict: 'id' }).then(() => {
+      const keepIds = stRows.map(r => r.id);
+      sb.from('statements').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
+    });
+  } else {
+    sb.from('statements').delete().eq('user_id', currentUserId).then();
+  }
 
-  sb.from('transactions').delete().eq('user_id', currentUserId).then(() => {
-    if (transactions.length > 0) {
-      sb.from('transactions').insert(transactions.map(t => ({
-        id: t.id, user_id: currentUserId, label: t.label,
-        amount: t.amount, source: t.source, target: t.target,
-        date: t.date, recurrence: t.recurrence,
-        day_of_month: t.dayOfMonth, interval_days: t.intervalDays
-      }))).then();
-    }
-  });
+  const txRows = transactions.map(t => ({
+    id: t.id, user_id: currentUserId, label: t.label,
+    amount: t.amount, source: t.source, target: t.target,
+    date: t.date, recurrence: t.recurrence,
+    day_of_month: t.dayOfMonth, interval_days: t.intervalDays
+  }));
+  if (txRows.length > 0) {
+    sb.from('transactions').upsert(txRows, { onConflict: 'id' }).then(() => {
+      const keepIds = txRows.map(r => r.id);
+      sb.from('transactions').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
+    });
+  } else {
+    sb.from('transactions').delete().eq('user_id', currentUserId).then();
+  }
 }
 
 // --- Supabase sync ---
 async function loadFromSupabase() {
   try {
-    const { data: sData } = await sb.from('settings').select('*').eq('user_id', currentUserId).single();
+    // Use maybeSingle() — returns null (not an error) when no row exists
+    const { data: sData, error: sErr } = await sb.from('settings').select('*').eq('user_id', currentUserId).maybeSingle();
+    if (sErr) throw sErr;
+
     if (sData) {
       settings = {
         checkingBalance: parseFloat(sData.checking_balance) || 0,
@@ -1346,24 +1359,42 @@ async function loadFromSupabase() {
       }
     }
 
-    const { data: stData } = await sb.from('statements').select('*').eq('user_id', currentUserId);
-    statements = (stData || []).map(s => ({
-      id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
-    }));
+    const { data: stData, error: stErr } = await sb.from('statements').select('*').eq('user_id', currentUserId);
+    if (stErr) throw stErr;
+    // Only overwrite local data if Supabase actually has rows (don't replace local data with nothing)
+    if (stData && stData.length > 0) {
+      statements = stData.map(s => ({
+        id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
+      }));
+    } else if (sData) {
+      // Settings exist but no statements — user genuinely has none
+      statements = [];
+    }
+    // else: no settings row either — Supabase is empty for this user, keep local data
 
-    const { data: txData } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
-    transactions = (txData || []).map(t => ({
-      id: t.id, label: t.label, amount: parseFloat(t.amount),
-      source: t.source, target: t.target, date: t.date,
-      recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
-    }));
+    const { data: txData, error: txErr } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
+    if (txErr) throw txErr;
+    if (txData && txData.length > 0) {
+      transactions = txData.map(t => ({
+        id: t.id, label: t.label, amount: parseFloat(t.amount),
+        source: t.source, target: t.target, date: t.date,
+        recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
+      }));
+    } else if (sData) {
+      transactions = [];
+    }
 
-    const { data: expData } = await sb.from('expenses').select('*').eq('user_id', currentUserId);
-    expenses = (expData || []).map(e => ({
-      id: e.id, label: e.label, amount: parseFloat(e.amount),
-      category: e.category, date: e.date, created_at: e.created_at,
-      card: e.card || 'Amex'
-    }));
+    const { data: expData, error: expErr } = await sb.from('expenses').select('*').eq('user_id', currentUserId);
+    if (expErr) throw expErr;
+    if (expData && expData.length > 0) {
+      expenses = expData.map(e => ({
+        id: e.id, label: e.label, amount: parseFloat(e.amount),
+        category: e.category, date: e.date, created_at: e.created_at,
+        card: e.card || 'Amex'
+      }));
+    } else if (sData) {
+      expenses = [];
+    }
 
     // Re-sync localStorage with remote data
     save('settings', settings);
@@ -1375,9 +1406,19 @@ async function loadFromSupabase() {
     save('statements', statements);
     save('transactions', transactions);
     save('expenses', expenses);
+
+    supabaseReady = true; // Safe to write back now
+    console.log('loadFromSupabase: success, supabaseReady=true');
+
+    // If Supabase was empty but we have local data, push it up
+    if (!sData && (settings.checkingBalance || statements.length || transactions.length || expenses.length)) {
+      console.log('loadFromSupabase: Supabase empty but local data exists, pushing up');
+      persist(); persistExpenses();
+    }
   } catch (err) {
     // Supabase unreachable — fall back to localStorage data already in memory
-    console.warn('loadFromSupabase failed, using localStorage:', err);
+    // supabaseReady stays false — persist() will NOT overwrite remote data
+    console.warn('loadFromSupabase failed, using localStorage (writes blocked):', err);
   }
 }
 
@@ -2679,16 +2720,20 @@ function persistExpenses() {
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
 
-  if (!currentUserId) return;
+  if (!currentUserId || !supabaseReady) return;
 
-  sb.from('expenses').delete().eq('user_id', currentUserId).then(() => {
-    if (expenses.length > 0) {
-      sb.from('expenses').insert(expenses.map(e => ({
-        id: e.id, user_id: currentUserId, label: e.label,
-        amount: e.amount, category: e.category, date: e.date, card: e.card
-      }))).then();
-    }
-  });
+  const expRows = expenses.map(e => ({
+    id: e.id, user_id: currentUserId, label: e.label,
+    amount: e.amount, category: e.category, date: e.date, card: e.card
+  }));
+  if (expRows.length > 0) {
+    sb.from('expenses').upsert(expRows, { onConflict: 'id' }).then(() => {
+      const keepIds = expRows.map(r => r.id);
+      sb.from('expenses').delete().eq('user_id', currentUserId).not('id', 'in', '(' + keepIds.join(',') + ')').then();
+    });
+  } else {
+    sb.from('expenses').delete().eq('user_id', currentUserId).then();
+  }
 
   // Sync budgets to settings row
   sb.from('settings').upsert({
