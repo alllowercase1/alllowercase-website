@@ -1215,6 +1215,9 @@ input.date-inline:focus { border-bottom-color: var(--text); outline: none; }
 </div>
 
 <script>
+const FC_VERSION = '2026-03-23-v7';
+console.log('Finance Calendar', FC_VERSION);
+
 // --- Supabase client ---
 const SUPABASE_URL = 'https://fjmhqaqnzktbcbkbahnf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbWhxYXFuemt0YmNia2JhaG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDIyMDksImV4cCI6MjA4NzIxODIwOX0.US8vAJe9SwdC_LaKedyNqJNcn_bBXPvt39B7KNS9WIU';
@@ -1325,12 +1328,7 @@ function persist() {
   save('catBudgets', catBudgets);
   save('cardBudgets', cardBudgets);
 
-  // Supabase (fire-and-forget — only if logged in AND we've loaded successfully)
-  if (!currentUserId || !supabaseReady) {
-    // Mark that we have unsynced local edits (for merge on reconnect)
-    if (currentUserId && !supabaseReady) save('offlineEdits', true);
-    return;
-  }
+  if (!currentUserId || !supabaseReady) return;
 
   upsertSettings();
 
@@ -1347,53 +1345,9 @@ function persist() {
   })));
 }
 
-// --- Supabase sync ---
-function snapshotState() {
-  return {
-    settings: JSON.parse(JSON.stringify(settings)),
-    cardNames: [...cardNames],
-    cardBudgets: JSON.parse(JSON.stringify(cardBudgets)),
-    categories: [...categories],
-    catBudgets: JSON.parse(JSON.stringify(catBudgets)),
-    expBudget,
-    statements: statements.map(s => ({...s})),
-    transactions: transactions.map(t => ({...t})),
-    expenses: expenses.map(e => ({...e}))
-  };
-}
-
-function restoreSnapshot(snap) {
-  settings = snap.settings;
-  cardNames = snap.cardNames;
-  cardBudgets = snap.cardBudgets;
-  categories = snap.categories;
-  catBudgets = snap.catBudgets;
-  expBudget = snap.expBudget;
-  statements = snap.statements;
-  transactions = snap.transactions;
-  expenses = snap.expenses;
-}
-
-// Merge local-only items (by ID) back into current state after remote load
-function mergeLocalItems(snap) {
-  const remoteStIds = new Set(statements.map(s => s.id));
-  for (const s of snap.statements) {
-    if (!remoteStIds.has(s.id)) statements.push(s);
-  }
-  const remoteTxIds = new Set(transactions.map(t => t.id));
-  for (const t of snap.transactions) {
-    if (!remoteTxIds.has(t.id)) transactions.push(t);
-  }
-  const remoteExpIds = new Set(expenses.map(e => e.id));
-  for (const e of snap.expenses) {
-    if (!remoteExpIds.has(e.id)) expenses.push(e);
-  }
-}
-
+// --- Supabase sync (simple: Supabase is always source of truth) ---
 async function loadFromSupabase() {
-  const snap = snapshotState(); // Snapshot for rollback + merge
   try {
-    // Use maybeSingle() — returns null (not an error) when no row exists
     const { data: sData, error: sErr } = await sb.from('settings').select('*').eq('user_id', currentUserId).maybeSingle();
     if (sErr) throw sErr;
 
@@ -1406,61 +1360,33 @@ async function loadFromSupabase() {
         paycheck: { amount: parseFloat(sData.paycheck_amount) || 0, seedDate: sData.paycheck_seed_date || '' }
       };
       cardNames = sData.card_names || ['Amex', 'Apple', 'Chase'];
-      if (sData.card_budgets && Object.keys(sData.card_budgets).length > 0) {
-        cardBudgets = sData.card_budgets;
-      }
-      if (sData.categories && sData.categories.length > 0) {
-        categories = sData.categories;
-      }
-      if (sData.cat_budgets && Object.keys(sData.cat_budgets).length > 0) {
-        catBudgets = sData.cat_budgets;
-      }
-      if (sData.exp_budget != null) {
-        expBudget = parseFloat(sData.exp_budget) || 0;
-      }
+      if (sData.card_budgets && Object.keys(sData.card_budgets).length > 0) cardBudgets = sData.card_budgets;
+      if (sData.categories && sData.categories.length > 0) categories = sData.categories;
+      if (sData.cat_budgets && Object.keys(sData.cat_budgets).length > 0) catBudgets = sData.cat_budgets;
+      if (sData.exp_budget != null) expBudget = parseFloat(sData.exp_budget) || 0;
     }
 
+    // For each table: if query succeeds, use the result (even if empty). If it fails, keep local data.
     const { data: stData, error: stErr } = await sb.from('statements').select('*').eq('user_id', currentUserId);
-    if (stErr) throw stErr;
-    if (stData && stData.length > 0) {
-      statements = stData.map(s => ({
-        id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
-      }));
-    } else if (sData) {
-      statements = [];
-    }
+    if (!stErr) statements = (stData || []).map(s => ({
+      id: s.id, card: s.card, amount: parseFloat(s.amount), dueDate: s.due_date, hidden: s.hidden
+    }));
 
     const { data: txData, error: txErr } = await sb.from('transactions').select('*').eq('user_id', currentUserId);
-    if (txErr) throw txErr;
-    if (txData && txData.length > 0) {
-      transactions = txData.map(t => ({
-        id: t.id, label: t.label, amount: parseFloat(t.amount),
-        source: t.source, target: t.target, date: t.date,
-        recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
-      }));
-    } else if (sData) {
-      transactions = [];
-    }
+    if (!txErr) transactions = (txData || []).map(t => ({
+      id: t.id, label: t.label, amount: parseFloat(t.amount),
+      source: t.source, target: t.target, date: t.date,
+      recurrence: t.recurrence, dayOfMonth: t.day_of_month, intervalDays: t.interval_days
+    }));
 
     const { data: expData, error: expErr } = await sb.from('expenses').select('*').eq('user_id', currentUserId);
-    if (expErr) throw expErr;
-    if (expData && expData.length > 0) {
-      expenses = expData.map(e => ({
-        id: e.id, label: e.label, amount: parseFloat(e.amount),
-        category: e.category, date: e.date, created_at: e.created_at,
-        card: e.card || 'Amex'
-      }));
-    } else if (sData) {
-      expenses = [];
-    }
+    if (!expErr) expenses = (expData || []).map(e => ({
+      id: e.id, label: e.label, amount: parseFloat(e.amount),
+      category: e.category, date: e.date, created_at: e.created_at,
+      card: e.card || 'Amex'
+    }));
 
-    // Merge local-only items ONLY if this device made edits while offline
-    if (load('offlineEdits')) {
-      mergeLocalItems(snap);
-      save('offlineEdits', false);
-    }
-
-    // Re-sync localStorage with remote data
+    // Cache to localStorage
     save('settings', settings);
     save('cardNames', cardNames);
     save('cardBudgets', cardBudgets);
@@ -1471,14 +1397,13 @@ async function loadFromSupabase() {
     save('transactions', transactions);
     save('expenses', expenses);
 
-    supabaseReady = true; // Safe to write back now
+    supabaseReady = true;
     document.getElementById('syncBadge').style.display = 'none';
-    console.log('loadFromSupabase: success, supabaseReady=true');
+    console.log('loadFromSupabase: success, supabaseReady=true, expenses:', expenses.length);
   } catch (err) {
-    // Rollback to pre-load state — no partial overwrites
-    restoreSnapshot(snap);
+    // Supabase unreachable — keep local data, block writes
     document.getElementById('syncBadge').style.display = 'block';
-    console.warn('loadFromSupabase failed, rolled back to local data:', err);
+    console.warn('loadFromSupabase failed, keeping local data:', err);
   }
 }
 
@@ -2780,17 +2705,13 @@ function persistExpenses() {
   save('expBudget', expBudget);
   save('catBudgets', catBudgets);
 
-  if (!currentUserId || !supabaseReady) {
-    if (currentUserId && !supabaseReady) save('offlineEdits', true);
-    return;
-  }
+  if (!currentUserId || !supabaseReady) return;
 
   syncRows('expenses', expenses.map(e => ({
     id: e.id, user_id: currentUserId, label: e.label,
     amount: e.amount, category: e.category, date: e.date, card: e.card
   })));
 
-  // Full settings upsert — never partial
   upsertSettings();
 }
 
@@ -3565,19 +3486,9 @@ window.addEventListener('storage', (e) => {
 // --- Reconnect: retry sync when tab becomes visible or network returns ---
 async function retrySync() {
   if (!currentUserId) return;
-
-  if (supabaseReady) {
-    // Already loaded successfully before — local data is authoritative, just re-push
-    persist(); persistExpenses();
-    return;
-  }
-
-  // Never loaded from Supabase — loadFromSupabase() handles snapshot/merge internally
-  console.log('retrySync: attempting first connect...');
-  await loadFromSupabase();
-  if (supabaseReady) {
-    persist(); persistExpenses();
-    render();
+  if (!supabaseReady) {
+    await loadFromSupabase();
+    if (supabaseReady) render();
   }
 }
 document.addEventListener('visibilitychange', () => {
