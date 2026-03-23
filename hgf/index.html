@@ -3502,11 +3502,37 @@ window.addEventListener('resize', () => {
 
 // --- Reconnect: retry sync when tab becomes visible or network returns ---
 async function retrySync() {
-  if (supabaseReady || !currentUserId) return;
-  console.log('retrySync: attempting reconnect...');
-  await loadFromSupabase();
+  if (!currentUserId) return;
+
   if (supabaseReady) {
-    // Flush local state to Supabase now that we're connected
+    // Already loaded successfully before — local data is authoritative, just re-push
+    persist(); persistExpenses();
+    return;
+  }
+
+  // Never loaded from Supabase — snapshot local data, load remote, then merge
+  console.log('retrySync: attempting first connect...');
+  const localStatements = [...statements];
+  const localTransactions = [...transactions];
+  const localExpenses = [...expenses];
+
+  await loadFromSupabase();
+
+  if (supabaseReady) {
+    // Merge: add any locally-created items that aren't in Supabase
+    const remoteStIds = new Set(statements.map(s => s.id));
+    for (const s of localStatements) {
+      if (!remoteStIds.has(s.id)) statements.push(s);
+    }
+    const remoteTxIds = new Set(transactions.map(t => t.id));
+    for (const t of localTransactions) {
+      if (!remoteTxIds.has(t.id)) transactions.push(t);
+    }
+    const remoteExpIds = new Set(expenses.map(e => e.id));
+    for (const e of localExpenses) {
+      if (!remoteExpIds.has(e.id)) expenses.push(e);
+    }
+
     persist(); persistExpenses();
     render();
   }
