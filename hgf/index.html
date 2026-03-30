@@ -1313,8 +1313,24 @@ function upsertSettings() {
 
 // Upsert rows to Supabase. No deletes — orphan rows are harmless, lost data is not.
 function syncRows(table, rows) {
-  if (!currentUserId || !supabaseReady || rows.length === 0) return;
-  sb.from(table).upsert(rows, { onConflict: 'id' }).then();
+  if (!currentUserId || !supabaseReady) return;
+
+  let deleteOp;
+  if (rows.length === 0) {
+    deleteOp = sb.from(table).delete().eq('user_id', currentUserId);
+  } else {
+    const ids = rows.map(r => r.id);
+    deleteOp = sb.from(table).delete().eq('user_id', currentUserId)
+      .not('id', 'in', `(${ids.join(',')})`);
+  }
+
+  deleteOp.then(({ error }) => {
+    if (error) { console.error(`sync delete ${table}:`, error); return; }
+    if (rows.length > 0) {
+      sb.from(table).upsert(rows, { onConflict: 'id' })
+        .then(({ error }) => { if (error) console.error(`sync upsert ${table}:`, error); });
+    }
+  });
 }
 
 function persist() {
