@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "26TJTGP873.com.alllowercase.FoF",
+        "paths": ["/auth/callback"]
+      }
+    ]
+  }
+}
