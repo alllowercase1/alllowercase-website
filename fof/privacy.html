@@ -134,9 +134,9 @@
         <a href="/fof" class="back-link">&larr; back to friends of friends</a>
 
         <h1>Privacy Policy</h1>
-        <p>Last Updated: April 4, 2026</p>
+        <p>Last Updated: July 8, 2026</p>
 
-        <p><strong>In Brief:</strong> friendsof helps you see who knows who in your network. We collect only what we need to make the app work, we never sell your data, and you can delete your account and all associated data at any time.</p>
+        <p><strong>In Brief:</strong> friendsof helps you see who knows who in your network. We collect only what we need to make the app work, we never sell your data, and you can request deletion of your account and all associated data at any time.</p>
 
         <h2>1. Introduction</h2>
         <p>Welcome to friendsof ("FoF", "we", "us", or "our"). This Privacy Policy explains how alllowercase, llc collects, uses, shares, and protects your personal information when you use our mobile application.</p>
@@ -148,6 +148,7 @@
         <p>When you create an account and use friendsof, you provide us with:</p>
         <ul>
             <li><strong>Account Information:</strong> Email address and display name</li>
+            <li><strong>Phone Number:</strong> Used only to send a one-time verification code (SMS) when you sign up or change your phone number. It is sent to our authentication provider to deliver that code and is never stored in our database in plain text.</li>
             <li><strong>Profile Photo:</strong> A user-uploaded profile picture</li>
             <li><strong>Content:</strong> Posts (text, images, videos), comments, and messages</li>
         </ul>
@@ -161,23 +162,32 @@
         </ul>
 
         <h3>2.3 Location Information (Optional)</h3>
-        <p>If you choose to enable location services through your device settings:</p>
+        <p>Location services are optional and used in two ways:</p>
         <ul>
-            <li>We collect coarse location data for feed personalization and nearby post discovery</li>
-            <li>Location data is used on-device for ranking and is <strong>not stored on our servers</strong></li>
-            <li>You can enable or disable location services at any time through iOS Settings</li>
+            <li><strong>Post Location:</strong> If you choose to add a location to a post, that location (place name and coordinates) is stored with the post on our servers and shown to anyone who can see that post, according to the post's visibility setting.</li>
+            <li><strong>Location Search:</strong> If you grant location permission, your device's coarse location may be used on-device to improve search suggestions (e.g. showing nearby places first). This is not uploaded to our servers on its own.</li>
+            <li>You can enable or disable location access at any time through iOS Settings.</li>
         </ul>
 
         <h3>2.4 Bug Reports</h3>
         <p>When you tap "Send Report" in the app to submit a bug report, we collect:</p>
         <ul>
+            <li><strong>Description:</strong> What you tell us about the issue</li>
             <li><strong>Device Information:</strong> iOS version, app version, and device model</li>
             <li><strong>Recent App Logs:</strong> Diagnostic log data from your current session</li>
+            <li><strong>Screenshots:</strong> Any screenshots you choose to include</li>
         </ul>
-        <p>This information is submitted only when you explicitly choose to send a report. It is never collected automatically or in the background.</p>
+        <p>This information is submitted only when you explicitly choose to send a report. It is never collected automatically or in the background. Bug reports are emailed to our support inbox (see Section 4.2) so we can review and respond to you directly.</p>
 
         <h3>2.5 Crash Data</h3>
-        <p>During the beta period, crash reports are collected by Apple through TestFlight. This data is handled by Apple's infrastructure, not ours. See <a href="https://www.apple.com/legal/privacy/">Apple's Privacy Policy</a> for details.</p>
+        <p>If the app crashes or encounters an error, we use <strong>Sentry</strong>, a crash-reporting service, to help us diagnose and fix the problem. When this happens, Sentry may automatically capture:</p>
+        <ul>
+            <li>A stack trace of the crash or error</li>
+            <li>A screenshot of what was on screen at the time</li>
+            <li>The on-screen view hierarchy (the structure of what was being displayed, not raw database contents)</li>
+            <li>Basic device information (iOS version, device model, app version)</li>
+        </ul>
+        <p>This data is sent directly to Sentry's servers and used solely to identify and fix bugs — never for advertising or analytics. During the beta period, Apple may separately collect crash reports through TestFlight, independent of Sentry; see <a href="https://www.apple.com/legal/privacy/">Apple's Privacy Policy</a> for details on that data.</p>
 
         <h3>2.6 Push Notifications</h3>
         <p>If you enable push notifications, we store your Apple Push Notification service (APNS) device token to deliver social notifications (new messages, post interactions, etc.). You can disable push notifications at any time in iOS Settings.</p>
@@ -211,7 +221,9 @@
         <p>We share information with the following trusted service providers:</p>
         <ul>
             <li><strong>Supabase:</strong> Our backend infrastructure provider for database, authentication, and file storage. Supabase is SOC 2 compliant and encrypts all data at rest and in transit.</li>
-            <li><strong>Apple TestFlight:</strong> During beta, Apple collects crash reports through TestFlight. We do not operate separate crash reporting infrastructure.</li>
+            <li><strong>Sentry:</strong> Our crash and error reporting provider. When the app crashes, Sentry may receive a stack trace, a screenshot, and the on-screen view hierarchy to help us diagnose the issue. See Section 2.5.</li>
+            <li><strong>Resend:</strong> Our email delivery provider. When you submit a bug report, its contents (your description, device info, and any attached screenshots) are sent via Resend to our support inbox.</li>
+            <li><strong>Apple TestFlight:</strong> During the beta period, Apple independently collects crash reports through TestFlight as part of its own platform, separate from Sentry.</li>
         </ul>
 
         <p><strong>We do NOT share your data with:</strong></p>
@@ -254,8 +266,8 @@
         <p>You can request a copy of your data by contacting us at jacob@alllowercase.co. We will provide your data in a machine-readable format within 30 days.</p>
 
         <h3>6.4 Account Deletion</h3>
-        <p>You can delete your account from the app by going to <strong>Settings &gt; Account &gt; Delete Account</strong>. This permanently removes your account, posts, messages, and all associated data from our servers.</p>
-        <p>You may also request account deletion by contacting jacob@alllowercase.co. Some data may be retained in encrypted backups for up to 90 days before permanent deletion.</p>
+        <p>To delete your account, contact us at jacob@alllowercase.co. We will permanently remove your account, posts, messages, and all associated data from our servers. Some data may be retained in encrypted backups for up to 90 days before permanent deletion.</p>
+        <p>An in-app self-service deletion option is planned for a future update.</p>
 
         <h2>7. Data Retention</h2>
         <p>We retain your information for as long as your account is active. Specifically:</p>
